@@ -13,6 +13,17 @@
 		4CDF629928DDEF200047C765 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 4CDF629828DDEF200047C765 /* Preview Assets.xcassets */; };
 		4CDF629B28DDEF200047C765 /* Persistence.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CDF629A28DDEF200047C765 /* Persistence.swift */; };
 		4CDF629E28DDEF200047C765 /* Next_Expense.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = 4CDF629C28DDEF200047C765 /* Next_Expense.xcdatamodeld */; };
+		4CDF62AA28DDF0F60047C765 /* AccountListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CDF62A928DDF0F60047C765 /* AccountListView.swift */; };
+		4CDF62AC28DDF1010047C765 /* AddAccountView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CDF62AB28DDF1010047C765 /* AddAccountView.swift */; };
+		4CDF62AE28DDF6FD0047C765 /* TransactionListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CDF62AD28DDF6FD0047C765 /* TransactionListView.swift */; };
+		4CDF62B028DDF7040047C765 /* AddTransactionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CDF62AF28DDF7040047C765 /* AddTransactionView.swift */; };
+		4CDF62B228DE0EBD0047C765 /* AccountView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CDF62B128DE0EBD0047C765 /* AccountView.swift */; };
+		4CDF62B428DE1F960047C765 /* TransactionDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CDF62B328DE1F960047C765 /* TransactionDetailView.swift */; };
+		4CDF62B628DE2FAB0047C765 /* CategoryListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CDF62B528DE2FAB0047C765 /* CategoryListView.swift */; };
+		4CDF62B828DE30CE0047C765 /* CategoryDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CDF62B728DE30CE0047C765 /* CategoryDetailView.swift */; };
+		4CDF62BA28DE31300047C765 /* AddCategoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CDF62B928DE31300047C765 /* AddCategoryView.swift */; };
+		4CDF62BC28DE35740047C765 /* CategoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CDF62BB28DE35740047C765 /* CategoryView.swift */; };
+		4CDF62BE28DE39D10047C765 /* AccountDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CDF62BD28DE39D10047C765 /* AccountDetailView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -24,6 +35,17 @@
 		4CDF629A28DDEF200047C765 /* Persistence.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Persistence.swift; sourceTree = "<group>"; };
 		4CDF629D28DDEF200047C765 /* Next_Expense.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = Next_Expense.xcdatamodel; sourceTree = "<group>"; };
 		4CDF629F28DDEF200047C765 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		4CDF62A928DDF0F60047C765 /* AccountListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountListView.swift; sourceTree = "<group>"; };
+		4CDF62AB28DDF1010047C765 /* AddAccountView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddAccountView.swift; sourceTree = "<group>"; };
+		4CDF62AD28DDF6FD0047C765 /* TransactionListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransactionListView.swift; sourceTree = "<group>"; };
+		4CDF62AF28DDF7040047C765 /* AddTransactionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddTransactionView.swift; sourceTree = "<group>"; };
+		4CDF62B128DE0EBD0047C765 /* AccountView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountView.swift; sourceTree = "<group>"; };
+		4CDF62B328DE1F960047C765 /* TransactionDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransactionDetailView.swift; sourceTree = "<group>"; };
+		4CDF62B528DE2FAB0047C765 /* CategoryListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CategoryListView.swift; sourceTree = "<group>"; };
+		4CDF62B728DE30CE0047C765 /* CategoryDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CategoryDetailView.swift; sourceTree = "<group>"; };
+		4CDF62B928DE31300047C765 /* AddCategoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddCategoryView.swift; sourceTree = "<group>"; };
+		4CDF62BB28DE35740047C765 /* CategoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CategoryView.swift; sourceTree = "<group>"; };
+		4CDF62BD28DE39D10047C765 /* AccountDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountDetailView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -56,12 +78,23 @@
 		4CDF629028DDEF1E0047C765 /* Next Expense */ = {
 			isa = PBXGroup;
 			children = (
+				4CDF62A528DDEF4C0047C765 /* Core data */,
 				4CDF629128DDEF1E0047C765 /* Next_ExpenseApp.swift */,
 				4CDF629328DDEF1E0047C765 /* ContentView.swift */,
+				4CDF62B528DE2FAB0047C765 /* CategoryListView.swift */,
+				4CDF62BB28DE35740047C765 /* CategoryView.swift */,
+				4CDF62B728DE30CE0047C765 /* CategoryDetailView.swift */,
+				4CDF62B928DE31300047C765 /* AddCategoryView.swift */,
+				4CDF62A928DDF0F60047C765 /* AccountListView.swift */,
+				4CDF62B128DE0EBD0047C765 /* AccountView.swift */,
+				4CDF62BD28DE39D10047C765 /* AccountDetailView.swift */,
+				4CDF62AB28DDF1010047C765 /* AddAccountView.swift */,
+				4CDF62AD28DDF6FD0047C765 /* TransactionListView.swift */,
+				4CDF62B328DE1F960047C765 /* TransactionDetailView.swift */,
+				4CDF62AF28DDF7040047C765 /* AddTransactionView.swift */,
+				4CDF62A628DDF0030047C765 /* Accounts */,
 				4CDF629528DDEF200047C765 /* Assets.xcassets */,
-				4CDF629A28DDEF200047C765 /* Persistence.swift */,
 				4CDF629F28DDEF200047C765 /* Info.plist */,
-				4CDF629C28DDEF200047C765 /* Next_Expense.xcdatamodeld */,
 				4CDF629728DDEF200047C765 /* Preview Content */,
 			);
 			path = "Next Expense";
@@ -73,6 +106,22 @@
 				4CDF629828DDEF200047C765 /* Preview Assets.xcassets */,
 			);
 			path = "Preview Content";
+			sourceTree = "<group>";
+		};
+		4CDF62A528DDEF4C0047C765 /* Core data */ = {
+			isa = PBXGroup;
+			children = (
+				4CDF629A28DDEF200047C765 /* Persistence.swift */,
+				4CDF629C28DDEF200047C765 /* Next_Expense.xcdatamodeld */,
+			);
+			path = "Core data";
+			sourceTree = "<group>";
+		};
+		4CDF62A628DDF0030047C765 /* Accounts */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = Accounts;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -145,10 +194,21 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				4CDF62AA28DDF0F60047C765 /* AccountListView.swift in Sources */,
 				4CDF629B28DDEF200047C765 /* Persistence.swift in Sources */,
+				4CDF62B628DE2FAB0047C765 /* CategoryListView.swift in Sources */,
+				4CDF62BE28DE39D10047C765 /* AccountDetailView.swift in Sources */,
+				4CDF62AC28DDF1010047C765 /* AddAccountView.swift in Sources */,
 				4CDF629428DDEF1E0047C765 /* ContentView.swift in Sources */,
+				4CDF62BA28DE31300047C765 /* AddCategoryView.swift in Sources */,
 				4CDF629228DDEF1E0047C765 /* Next_ExpenseApp.swift in Sources */,
+				4CDF62B028DDF7040047C765 /* AddTransactionView.swift in Sources */,
+				4CDF62BC28DE35740047C765 /* CategoryView.swift in Sources */,
+				4CDF62B228DE0EBD0047C765 /* AccountView.swift in Sources */,
+				4CDF62AE28DDF6FD0047C765 /* TransactionListView.swift in Sources */,
+				4CDF62B428DE1F960047C765 /* TransactionDetailView.swift in Sources */,
 				4CDF629E28DDEF200047C765 /* Next_Expense.xcdatamodeld in Sources */,
+				4CDF62B828DE30CE0047C765 /* CategoryDetailView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

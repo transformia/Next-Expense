@@ -20,19 +20,59 @@ struct CategoryListView: View {
         animation: .default)
     private var accounts: FetchedResults<Account> // to be able to call AddTransactionView with a default account
     
+    @FetchRequest(
+        sortDescriptors: [NSSortDescriptor(keyPath: \Period.startdate, ascending: true)],
+        animation: .default)
+    private var periods: FetchedResults<Period> // to be able to select the active period
+    
+    @FetchRequest(
+        sortDescriptors: [NSSortDescriptor(keyPath: \Budget.id, ascending: true)],
+        animation: .default)
+    private var budgets: FetchedResults<Budget> // to be able to calculate the budget per category
+    
     @State private var addCategoryView = false // determines whether that view is displayed or not
     
     @State private var addTransactionView = false // determines whether that view is displayed or not
     
+    @State private var period = Period() // period (month) selected in the picker
+    
+    class SelectedPeriod: ObservableObject {
+        @Published var period = Period()
+        @Published var periodStartDate = Date()
+    }
+    @StateObject var selectedPeriod = SelectedPeriod() // period visible from other views
+    
     var body: some View {
         NavigationView {
             VStack {
+                Picker("Period", selection: $period) {
+                    ForEach(periods, id: \.self) { period in
+                        Text(period.startdate ?? Date(), formatter: dateFormatter)
+                    }
+                }
+                .onAppear {
+                    period = getTodaysPeriod() // set the period to today's period
+                    selectedPeriod.period = period // set the period value visible from other view to the value chosen in the picker
+                    selectedPeriod.periodStartDate = period.startdate ?? Date()
+                }
+                .onChange(of: period) { _ in
+                    selectedPeriod.period = period // set the period value visible from other view to the value chosen in the picker
+                    selectedPeriod.periodStartDate = period.startdate ?? Date()
+                }
+                
+                NavigationLink { // link containing the simplified P&L, leading to the ReportingView()
+                    ReportingView(selectedPeriod: selectedPeriod)
+                } label: {
+                    MiniReportingView(selectedPeriod: selectedPeriod)
+                }
+                .buttonStyle(PlainButtonStyle()) // remove blue color from the link
+                
                 List {
                     ForEach(categories) { category in
                         NavigationLink {
                             CategoryDetailView(category: category)
-                        } label :{
-                            CategoryView(category: category)
+                        } label: {
+                            CategoryView(category: category,selectedPeriod: selectedPeriod)
                         }
                     }
                     .onMove(perform: moveItem)
@@ -41,7 +81,7 @@ struct CategoryListView: View {
                     AddCategoryView()
                 }
                 .sheet(isPresented: $addTransactionView) {
-                    AddTransactionView(defaultAccount: accounts[0], defaultCategory: categories[0])
+                    AddTransactionView(account: accounts[0], category: categories[0])
                 }
                 .toolbar {
                     ToolbarItem(placement: .navigationBarTrailing) {
@@ -57,7 +97,12 @@ struct CategoryListView: View {
                 }
                 
                 Button {
-                    addTransactionView.toggle() // show the view where I can add a new element
+                    if(categories.count > 0 && accounts.count > 0) {
+                        addTransactionView.toggle() // show the view where I can add a new element
+                    }
+                    else {
+                        print("You need to create at least one account and one category before you can create a transaction")
+                    }
                 } label: {
                     Image(systemName: "plus")
                         .resizable()
@@ -71,6 +116,27 @@ struct CategoryListView: View {
             }
         }
     }
+    
+    private func getTodaysPeriod() -> Period { // get the period corresponding to today's date
+        let year = Calendar.current.dateComponents([.year], from: Date()).year ?? 1900
+        let month = Calendar.current.dateComponents([.month], from: Date()).month ?? 1
+        
+        for period in periods {
+            if(period.year == year) {
+                if(period.month == month) {
+                    return period
+                }
+            }
+        }
+        return Period() // if no period is found, return a new one (because I need to return something in all cases)
+    }
+    
+    
+    private let dateFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "MMM Y"
+        return formatter
+    }()
     
     private func moveItem(at sets:IndexSet, destination: Int) {
         let itemToMove = sets.first!

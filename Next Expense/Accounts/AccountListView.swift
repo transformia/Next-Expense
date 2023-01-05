@@ -42,7 +42,7 @@ struct AccountListView: View {
                     AddAccountView()
                 }
                 .sheet(isPresented: $addTransactionView) {
-                    AddTransactionView(defaultAccount: accounts[0], defaultCategory: categories[0])
+                    AddTransactionView(account: accounts[0], category: categories[0])
                 }
                 .toolbar {
                     ToolbarItem(placement: .navigationBarTrailing) {
@@ -58,7 +58,12 @@ struct AccountListView: View {
                 }
                 
                 Button {
-                    addTransactionView.toggle() // show the view where I can add a new element
+                    if(categories.count > 0 && accounts.count > 0) {
+                        addTransactionView.toggle() // show the view where I can add a new element
+                    }
+                    else {
+                        print("You need to create at least one account and one category before you can create a transaction")
+                    }
                 } label: {
                     Image(systemName: "plus")
                         .resizable()

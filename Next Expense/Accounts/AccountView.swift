@@ -17,19 +17,15 @@ struct AccountView: View {
     
     let account: Account
     
-    @State private var balance = 0.0
+    @State private var balance = 0
     
     var body: some View {
         HStack {
             Text(account.name ?? "")
-            Text(balance / 100, format: .currency(code: account.currency ?? "EUR"))
+            Spacer()
+            Text(Double(balance) / 100, format: .currency(code: account.currency ?? "EUR"))
                 .onAppear {
-                    balance = 0
-                    for transaction in transactions {
-                        if(transaction.account == account) { // if the account matches
-                            balance += transaction.income ? Double(transaction.amount) : -Double(transaction.amount) // add or substract the amount, depending on the direction of the transaction
-                        }
-                    }
+                    balance = account.calcBalance(toDate: Date())
                 }
         }
     }

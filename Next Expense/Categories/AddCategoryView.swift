@@ -19,11 +19,20 @@ struct AddCategoryView: View {
     
     // Define variables for the new category's attributes:
     @State private var name = ""
+    @State private var type = "Expense" // tells us the type of the category
+    
+    // Define category types:
+    let types = ["Income", "Expense", "Investment"]
     
     var body: some View {
         VStack {
             Form {
                 TextField("Category name", text: $name)
+                Picker("Category type", selection: $type) {
+                    ForEach(types, id: \.self) {
+                        Text($0)
+                    }
+                }
             }
             createCategoryButton
         }
@@ -35,6 +44,7 @@ struct AddCategoryView: View {
             
             category.id = UUID()
             category.name = name
+            category.type = type
             category.order = (categories.last?.order ?? 0) + 1
             
             PersistenceController.shared.save() // save the item

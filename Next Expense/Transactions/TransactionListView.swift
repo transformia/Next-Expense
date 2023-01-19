@@ -29,6 +29,7 @@ struct TransactionListView: View {
     
     
     // Filters with which to call this view:
+    let payee: Payee?
     let account: Account?
     let category: Category?
     
@@ -40,38 +41,43 @@ struct TransactionListView: View {
                     ForEach(transactions) { transaction in
                         if(category == nil || transaction.category == category) { // if there is no filter, or the transaction matches the filter
                             if(account == nil || transaction.account == account) { // if there is no filter, or the transaction matches the filter
-                                NavigationLink {
-                                    TransactionDetailView(transaction: transaction)
-                                } label : {
-                                    HStack {
-                                        VStack {
-                                            HStack {
-                                                Text(transaction.date ?? Date(), formatter: dateFormatter)
-                                                    .font(.callout)
-//                                                Text("\(transaction.period?.monthString ?? "Jan") \(transaction.period?.year ?? 1900)")
-                                                
-                                                Text(transaction.payee?.name ?? "")
-                                                    .font(.callout)
-                                                Spacer()
+                                if(payee == nil || transaction.payee == payee) { // if there is no filter, or the transaction matches the filter
+                                    NavigationLink {
+                                        TransactionDetailView(transaction: transaction)
+                                    } label : {
+                                        HStack {
+                                            VStack {
+                                                HStack {
+                                                    if(transaction.recurring) {
+                                                        Image(systemName: "arrow.counterclockwise")
+                                                    }
+                                                    Text(transaction.date ?? Date(), formatter: dateFormatter)
+                                                        .font(.callout)
+                                                    //                                                Text("\(transaction.period?.monthString ?? "Jan") \(transaction.period?.year ?? 1900)")
+                                                    
+                                                    Text(transaction.payee?.name ?? "")
+                                                        .font(.callout)
+                                                    Spacer()
+                                                }
+                                                HStack {
+                                                    Text(transaction.account?.name ?? "")
+                                                        .font(.caption)
+                                                        .foregroundColor(.gray)
+                                                    Spacer()
+                                                    Text(transaction.category?.name ?? "")
+                                                        .font(.caption)
+                                                        .foregroundColor(.blue)
+                                                    Spacer()
+                                                }
+                                                HStack {
+                                                    Text(transaction.memo ?? "")
+                                                        .font(.caption)
+                                                        .foregroundColor(.gray)
+                                                }
                                             }
-                                            HStack {
-                                                Text(transaction.account?.name ?? "")
-                                                    .font(.caption)
-                                                    .foregroundColor(.gray)
-                                                Spacer()
-                                                Text(transaction.category?.name ?? "")
-                                                    .font(.caption)
-                                                    .foregroundColor(.blue)
-                                                Spacer()
-                                            }
-                                            HStack {
-                                                Text(transaction.memo ?? "")
-                                                    .font(.caption)
-                                                    .foregroundColor(.gray)
-                                            }
+                                            Text(Double(transaction.amount) / 100, format: .currency(code: transaction.currency ?? "EUR"))
+                                                .foregroundColor(transaction.income ? .green : .primary)
                                         }
-                                        Text(Double(transaction.amount) / 100, format: .currency(code: transaction.currency ?? "EUR"))
-                                            .foregroundColor(transaction.income ? .green : .primary)
                                     }
                                 }
                             }
@@ -79,7 +85,7 @@ struct TransactionListView: View {
                     }
                 }
                 .sheet(isPresented: $addTransactionView) {
-                    AddTransactionView(account: account ?? accounts[0], category: category ?? categories[0])
+                    AddTransactionView(payee: nil, account: account ?? accounts[0], category: category ?? categories[0])
                 }
             }
             

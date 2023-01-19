@@ -34,6 +34,11 @@ struct TransactionDetailView: View {
     
     let transaction: Transaction // transaction to display
     
+    @StateObject var amount = AddTransactionView.Amount() // stores the transaction amount, and the visibility of the numpad as seen from NumpadView / NumpadKeyView
+    
+    // Variable determining whether the focus is on the payee or not:
+    @FocusState private var payeeFocused: Bool
+    
     // Define variables for the transactions's new attributes:
     @State private var date = Date()
     @State private var selectedPayee: Payee?
@@ -42,7 +47,7 @@ struct TransactionDetailView: View {
     @State private var selectedCategory: Category?
     @State private var income = false // tells us the sign of the transaction
     @State private var transfer = false // tells us if this is a transfer between accounts
-    @State private var amount = 0
+//    @State private var amount = 0
     @State private var payeeFilter = ""
     @State private var currency = "EUR"
     @State private var memo = ""
@@ -50,7 +55,7 @@ struct TransactionDetailView: View {
     @State private var showingDeleteAlert = false
     
     // Variable determining whether the focus is on the amount text editor or not:
-    @FocusState private var isFocused: Bool
+//    @FocusState private var isFocused: Bool
     
     // Define available currencies:
     let currencies = ["EUR", "SEK"]
@@ -78,23 +83,39 @@ struct TransactionDetailView: View {
 //                        }
 //                        .focused($isFocused)
                     
-                    ZStack {
-                        TextField("Amount", value: $amount, formatter: NumberFormatter())
-                            .keyboardType(.numberPad)
-                            .focused($isFocused)
-                            .onAppear {
-                                amount = Int(transaction.amount)
-                            }
-                            .focused($isFocused)
-                        Text(Double(amount) / 100, format: .currency(code: currency))
-                            .foregroundColor(income ? .green : .primary)
-                    }
+//                    ZStack {
+//                        TextField("Amount", value: $amount, formatter: NumberFormatter())
+//                            .keyboardType(.numberPad)
+//                            .focused($isFocused)
+//                            .onAppear {
+//                                amount = Int(transaction.amount)
+//                            }
+//                            .focused($isFocused)
+//                        Text(Double(amount) / 100, format: .currency(code: currency))
+//                            .foregroundColor(income ? .green : .primary)
+//                    }
+                    
+                    Text(Double(amount.intAmount) / 100, format: .currency(code: "EUR")) // amount of the transaction
+                        .foregroundColor(income ? .green : .primary)
+                        .onAppear {
+                            amount.intAmount = Int(transaction.amount)
+                        }
+                        .onTapGesture {
+                            amount.showNumpad.toggle()
+                            payeeFocused = false // in case the payee field is selected, remove focus from it so that the keyboard closes
+                        }
                 }
                 Group {
                     TextField("Payee", text: $payeeFilter)
                         .onAppear {
                             payeeFilter = transaction.payee?.name ?? ""
                             selectedPayee = transaction.payee
+                        }
+                        .focused($payeeFocused)
+                        .onTapGesture {
+//                                    withAnimation {
+                            amount.showNumpad = false // hide the custom numpad, so I don't need to tap twice to get to the payee
+//                                    }
                         }
                     if((payeeFilter != "" && selectedPayee == nil) || (payeeFilter != selectedPayee?.name && payeeFilter != "")) { // display the list of matching payees when I start typing in the text field, until I have selected one. Also do that if I'm trying to modify the payee
                         List(payees.filter({
@@ -144,6 +165,7 @@ struct TransactionDetailView: View {
                         }
                     HStack {
                         saveButton
+                        Spacer()
                         deleteButton
                     }
                     .padding()
@@ -162,6 +184,10 @@ struct TransactionDetailView: View {
 //                }
 //            }
             
+        }
+        .sheet(isPresented: $amount.showNumpad) {
+            NumpadView(amount: amount)
+                .presentationDetents([.height(300)])
         }
     }
     
@@ -184,7 +210,7 @@ struct TransactionDetailView: View {
             transaction.period = getPeriod(date: date)
             transaction.payee = selectedPayee
             transaction.category = selectedCategory
-            transaction.amount = Int64(amount) // save amount as an int, i.e. 2560 means 25,60€ for example
+            transaction.amount = Int64(amount.intAmount) // save amount as an int, i.e. 2560 means 25,60€ for example
             transaction.income = income // save the direction of the transaction, true for an income, false for an expense
 //            transaction.transfer = transfer // save the information of whether or not this is a transfer - not needed, as I can't change it
             transaction.currency = currency

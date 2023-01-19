@@ -21,10 +21,7 @@ struct CategoryView: View {
     
     @State private var categoryBalance = 0.0
     
-    @StateObject var categoryBudget = AddTransactionView.Amount()
-    
-    // Variable determining whether the custom keypad is shown or not:
-    @State private var showKeypad = false
+    @StateObject var categoryBudget = AddTransactionView.Amount() // stores the budgeted amount, and the visibility of the numpad as seen from NumpadView / NumpadKeyView
         
     var body: some View {
         HStack {
@@ -44,7 +41,7 @@ struct CategoryView: View {
                     saveBudget()
                 }
                 .onTapGesture {
-                    showKeypad.toggle()
+                    categoryBudget.showNumpad.toggle()
                 }
                 .font(.caption)
                 .foregroundColor(.blue)
@@ -53,7 +50,6 @@ struct CategoryView: View {
             
             Text(Double(categoryBalance) / 100, format: .currency(code: "EUR")) // amount spent
                 .onAppear {
-//                    categoryBalance = category.income ? category.calcBalance(period: selectedPeriod.period) : -category.calcBalance(period: selectedPeriod.period) // category balance for income, opposite of category balance for expenses, to make everything positive
                     categoryBalance = category.calcBalance(period: selectedPeriod.period)
                 }
                 .onChange(of: selectedPeriod.period) { _ in
@@ -70,10 +66,22 @@ struct CategoryView: View {
                     .foregroundColor((Double(categoryBudget.intAmount) + Double(categoryBalance)) < 0 ? .red : .green)
             }
         }
-        .sheet(isPresented: $showKeypad) {
+        .sheet(isPresented: $categoryBudget.showNumpad) {
             NumpadView(amount: categoryBudget)
-                .presentationDetents([.height(280)])
+                .presentationDetents([.height(300)])
         }
+        .swipeActions(edge: .trailing) {
+            budgetToSpent
+        }
+    }
+    
+    var budgetToSpent: some View {
+        Button {
+            categoryBudget.intAmount = Int(-categoryBalance)
+        } label: {
+            Label("Spent", systemImage: "equal")
+        }
+        .tint(.blue)
     }
     
     private func saveBudget() {

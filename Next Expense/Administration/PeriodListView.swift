@@ -24,7 +24,7 @@ struct PeriodListView: View {
             })
             List {
                 ForEach(periods) { period in
-//                    Text("\(period.startdate ?? Date())")
+                    Text("\(period.startdate ?? Date())")
                     HStack {
                         Text(yearFormatter.string(from: period.year as NSNumber) ?? "None")
                         Text("\(period.month)")

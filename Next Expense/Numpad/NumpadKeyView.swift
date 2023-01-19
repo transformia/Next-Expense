@@ -19,52 +19,73 @@ struct NumpadKeyView: View {
             configuration.label
                 .padding()
                 .foregroundColor(.white)
-                .frame(width: 120, height: 50)
-                .background(configuration.isPressed ? Color.gray : Color.black.opacity(0))
+                .frame(width: 80, height: 50)
+//                .background(configuration.isPressed ? Color.gray : Color.blue)
+                .background(configuration.isPressed ? Color.gray : Color.black.opacity(0.1))
+//                .background(configuration.isPressed ? Color.gray : Color.black.opacity(0))
                 .cornerRadius(10)
                 .padding(0)
         }
     }
     
     var body: some View {
-//        Text(specialKey == "" ? String(key) : (specialKey == "Backspace") ? "<" : "x")
-//            .frame(width: 60, height: 60)
-//            .background(.blue)
-//            .font(.title)
-//            .cornerRadius(10)
-//            .onTapGesture {
-//                let impactMed = UIImpactFeedbackGenerator(style: .medium) // haptic feedback
-//                impactMed.impactOccurred()
-//
-//                if(specialKey == "") {
-//                    amount.intAmount = amount.intAmount * 10 + Int(key)
-//                }
-//                else if(specialKey == "Backspace") {
-//                    amount.intAmount = amount.intAmount / 10
-//                }
-//                else if(specialKey == "Done") {
-//                    print("Dismiss the keyboard")
-//                }
-//            }
-        
         Button(action: {
             let impactMed = UIImpactFeedbackGenerator(style: .medium) // haptic feedback
             impactMed.impactOccurred() // haptic feedback
             
-            if(specialKey == "") {
-                amount.intAmount = amount.intAmount * 10 + Int(key)
-            }
-            else if(specialKey == "Backspace") {
+            switch(specialKey) {
+            case "":
+                if(amount.intAmount < 100000000000) { // stop accepting new digits when the amount is above one billion
+                    amount.intAmount = amount.intAmount * 10 + Int(key)
+                }
+            case "Backspace":
                 amount.intAmount = amount.intAmount / 10
-            }
-            else if(specialKey == "Done") {
-//                amount.moveFocusToPayee = true
+            case "Clear":
                 amount.intAmount = 0
+            case "Done":
+                amount.showNumpad = false
+            case "-":
+                print("Minus")
+            case "+":
+                print("Plus")
+            case "=":
+                print("Equal")
+            default:
+                print("Undefined")
             }
-            
         }) {
-            Text(specialKey == "" ? String(key) : (specialKey == "Backspace") ? "<" : "x")
-                .font(.title)
+            switch(specialKey) {
+            case "":
+                Text(String(key))
+                    .font(.title)
+            case "Backspace":
+//                Text("<")
+//                    .font(.title)
+                Image(systemName: "delete.backward")
+                    .foregroundColor(.cyan)
+            case "Clear":
+                Image(systemName: "xmark")
+                    .foregroundColor(.cyan)
+            case "Done":
+                Image(systemName: "checkmark")
+                    .font(.title)
+                    .foregroundColor(.green)
+            case "-":
+                Text("-")
+                    .font(.title)
+                    .foregroundColor(.cyan)
+            case "+":
+                Text("+")
+                    .font(.title)
+                    .foregroundColor(.cyan)
+            case "=":
+                Text("=")
+                    .font(.title)
+                    .foregroundColor(.cyan)
+            default:
+                Text("")
+                    .font(.title)
+            }
         }
         .buttonStyle(KeyButtonStyle())
     }

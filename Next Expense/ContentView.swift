@@ -27,9 +27,14 @@ struct ContentView: View {
                     Label("Accounts", systemImage: "banknote")
                 }
             
-            TransactionListView(account: nil, category: nil)
+            TransactionListView(payee: nil, account: nil, category: nil)
                 .tabItem {
                     Label("Transactions", systemImage: "list.triangle")
+                }
+            
+            PayeeListView()
+                .tabItem {
+                    Label("Payees", systemImage: "house")
                 }
             
             CSVExportView()
@@ -37,10 +42,15 @@ struct ContentView: View {
                     Label("Export", systemImage: "list.triangle")
                 }
             
-            PeriodListView()
-                .tabItem {
-                    Label("Periods", systemImage: "questionmark.folder.fill")
-                }
+//            AdminView()
+//                .tabItem {
+//                    Label("Admin", systemImage: "key")
+//                }
+            
+//            PeriodListView()
+//                .tabItem {
+//                    Label("Periods", systemImage: "questionmark.folder.fill")
+//                }
 //            BudgetListView()
 //                .tabItem {
 //                    Label("Budgets", systemImage: "questionmark.folder.fill")
@@ -65,6 +75,7 @@ struct ContentView: View {
 //            PersistenceController.shared.save() // save the changes
 //        }
 //    }
+        
     
     func createPeriods() {
         if(periods.count == 0) { // create periods if there are none

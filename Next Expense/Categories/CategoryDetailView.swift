@@ -55,9 +55,9 @@ struct CategoryDetailView: View {
 //                .buttonStyle(BorderlessButtonStyle()) // to avoid that buttons inside the same HStack activate together
             }
             
-            TransactionListView(account: nil, category: category)
+            TransactionListView(payee: nil, account: nil, category: category)
             .sheet(isPresented: $addTransactionView) {
-                AddTransactionView(account: accounts[0], category: category)
+                AddTransactionView(payee: nil, account: accounts[0], category: category)
             }
         }
     }

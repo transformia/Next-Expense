@@ -22,12 +22,37 @@ struct TransactionListView: View {
                     Text(transaction.memo ?? "Hello")
                 } label : {
                     HStack {
-                        Text(transaction.date ?? Date(), formatter: dateFormatter)
-//                        Text(transaction.account?.name ?? "")
-                        Text(transaction.category?.name ?? "")
-                        Text(Double(transaction.amount) / 100, format: .currency(code: transaction.currency ?? "EUR"))
-                            .foregroundColor(transaction.income ? .green : .primary)
-//                        Text(transaction.memo ?? "")
+                        VStack {
+                            HStack {
+                                Text(transaction.date ?? Date(), formatter: dateFormatter)
+                                    .font(.callout)
+                                
+                                Spacer()
+                                
+                                Text(Double(transaction.amount) / 100, format: .currency(code: transaction.currency ?? "EUR"))
+                                    .foregroundColor(transaction.income ? .green : .primary)
+                            }
+                            HStack {
+                                Text(transaction.payee?.name ?? "")
+                                    .font(.callout)
+                                Spacer()
+                            }
+                            HStack {
+                                Text(transaction.account?.name ?? "")
+                                    .font(.caption)
+                                    .foregroundColor(.gray)
+                                Spacer()
+                                Text(transaction.category?.name ?? "")
+                                    .font(.caption)
+                                    .foregroundColor(.blue)
+                                Spacer()
+                            }
+                            HStack {
+                                Text(transaction.memo ?? "")
+                                    .font(.caption)
+                                    .foregroundColor(.gray)
+                            }
+                        }
                     }
                 }
             }

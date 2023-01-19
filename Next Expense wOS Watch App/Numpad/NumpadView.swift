@@ -1,8 +1,8 @@
 //
 //  NumpadView.swift
-//  Next Expense
+//  Next Expense wOS Watch App
 //
-//  Created by Michael Frisk on 2022-10-19.
+//  Created by Michael Frisk on 2023-01-17.
 //
 
 import SwiftUI
@@ -15,31 +15,26 @@ struct NumpadView: View {
         VStack {
             
             Text(Double(amount.intAmount) / 100, format: .currency(code: "EUR")) // amount budgeted
-                .bold(true)
             
             VStack {
                 HStack {
-                    NumpadKeyView(amount: amount, key: 7, specialKey: "")
-                    NumpadKeyView(amount: amount, key: 8, specialKey: "")
-                    NumpadKeyView(amount: amount, key: 9, specialKey: "")
-                    NumpadKeyView(amount: amount, key: 0, specialKey: "-")
+                    NumpadKeyView(amount: amount, key: 1, specialKey: "")
+                    NumpadKeyView(amount: amount, key: 2, specialKey: "")
+                    NumpadKeyView(amount: amount, key: 3, specialKey: "")
                 }
                 HStack {
                     NumpadKeyView(amount: amount, key: 4, specialKey: "")
                     NumpadKeyView(amount: amount, key: 5, specialKey: "")
                     NumpadKeyView(amount: amount, key: 6, specialKey: "")
-                    NumpadKeyView(amount: amount, key: 0, specialKey: "+")
                 }
                 HStack {
-                    NumpadKeyView(amount: amount, key: 1, specialKey: "")
-                    NumpadKeyView(amount: amount, key: 2, specialKey: "")
-                    NumpadKeyView(amount: amount, key: 3, specialKey: "")
-                    NumpadKeyView(amount: amount, key: 0, specialKey: "=")
+                    NumpadKeyView(amount: amount, key: 7, specialKey: "")
+                    NumpadKeyView(amount: amount, key: 8, specialKey: "")
+                    NumpadKeyView(amount: amount, key: 9, specialKey: "")
                 }
                 HStack {
-                    NumpadKeyView(amount: amount, key: 0, specialKey: "Clear")
-                    NumpadKeyView(amount: amount, key: 0, specialKey: "")
                     NumpadKeyView(amount: amount, key: 0, specialKey: "Backspace")
+                    NumpadKeyView(amount: amount, key: 0, specialKey: "")
                     NumpadKeyView(amount: amount, key: 0, specialKey: "Done")
                 }
                 .padding(.bottom, 30)

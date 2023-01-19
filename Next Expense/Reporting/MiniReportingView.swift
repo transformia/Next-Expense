@@ -32,9 +32,19 @@ struct MiniReportingView: View {
     var body: some View {
         VStack {
             HStack {
-                Spacer()
-                VStack {
+                
+                VStack(alignment: .leading) {
+                    Text("")
                     Text("Income")
+                    Text("Expenses")
+                    Text("Savings")
+                }
+                
+                Spacer()
+                
+                VStack {
+                    Text("Budget")
+                    
                     Text(monthlyIncomeBudget / 100, format: .currency(code: "EUR"))
                         .onAppear {
                             monthlyIncomeBudget = monthlyBudgets().0
@@ -44,6 +54,17 @@ struct MiniReportingView: View {
                             monthlyIncomeBudget = monthlyBudgets().0
                             monthlyExpenseBudget = monthlyBudgets().1
                         }
+                    
+                    Text(monthlyExpenseBudget / 100, format: .currency(code: "EUR"))
+                    
+                    Text((monthlyIncomeBudget - monthlyExpenseBudget) / 100, format: .currency(code: "EUR"))
+                }
+                
+                Spacer()
+                
+                VStack {
+                    Text("Actual")
+                    
                     Text(monthlyIncome / 100, format: .currency(code: "EUR"))
                         .onAppear {
                             monthlyIncome = monthlyBalances().0
@@ -53,19 +74,12 @@ struct MiniReportingView: View {
                             monthlyIncome = monthlyBalances().0
                             monthlyExpenses = monthlyBalances().1
                         }
-                }
-                Spacer()
-                VStack {
-                    Text("Expenses")
-                    Text(monthlyExpenseBudget / 100, format: .currency(code: "EUR"))
+                    
                     Text(monthlyExpenses / 100, format: .currency(code: "EUR"))
-                }
-                Spacer()
-                VStack {
-                    Text("Savings")
-                    Text((monthlyIncomeBudget - monthlyExpenseBudget) / 100, format: .currency(code: "EUR"))
+                    
                     Text((monthlyIncome - monthlyExpenses) / 100, format: .currency(code: "EUR"))
                 }
+                
                 Spacer()
             }
             
@@ -82,8 +96,8 @@ struct MiniReportingView: View {
                 }
                 HStack {
                     Text("Budget available")
-                    Text(budgetedExpenses() / 100, format: .currency(code: "EUR"))
-                    Text(monthlyBalances().1 / 100, format: .currency(code: "EUR"))
+//                    Text(budgetedExpenses() / 100, format: .currency(code: "EUR"))
+//                    Text(monthlyBalances().1 / 100, format: .currency(code: "EUR"))
                     Text(budgeted / 100, format: .currency(code: "EUR"))
                         .onAppear {
                             budgeted = budgetedExpenses() - monthlyBalances().1
@@ -94,6 +108,7 @@ struct MiniReportingView: View {
                 }
             }
         }
+        .padding()
     }
     
     private func totalBalance(periodStartDate: Date) -> Double { // total balance of all accounts as of the provided period
@@ -132,12 +147,12 @@ struct MiniReportingView: View {
                 if(transaction.period == selectedPeriod.period) { // if the transaction is from the selected period
                     //                print(transaction.amount)
                     if(transaction.income) { // if this is an income
-                        if(transaction.category?.type != "Investment") { // if the category is an income or expense category
+                        if(transaction.category?.type == "Income") { // if the category is an income category
                             monthlyInc += Double(transaction.amount) // using Double so that it can be divided by 100 when displaying it
                         }
                     }
                     else { // if this is an expense
-                        if(transaction.category?.type != "Investment") { // if the category is an income or expense category
+                        if(transaction.category?.type == "Expense") { // if the category is an expense category
                             monthlyExp += Double(transaction.amount) // using Double so that it can be divided by 100 when displaying it
                         }
                     }

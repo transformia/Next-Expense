@@ -39,25 +39,41 @@ struct CategoryListView: View {
     class SelectedPeriod: ObservableObject {
         @Published var period = Period()
         @Published var periodStartDate = Date()
+        @Published var periodChangedManually = false // detects whether the user has changed period manually, so that the onAppear doesn't reset the period to today's period once it has been changed
     }
     @StateObject var selectedPeriod = SelectedPeriod() // period visible from other views
     
     var body: some View {
         NavigationView {
             VStack {
-                Picker("Period", selection: $period) {
-                    ForEach(periods, id: \.self) { period in
-                        Text(period.startdate ?? Date(), formatter: dateFormatter)
+                
+                HStack {
+                    previousPeriod
+                    
+                    Picker("Period", selection: $period) {
+                        ForEach(periods, id: \.self) { period in
+                            Text(period.startdate ?? Date(), formatter: dateFormatter)
+//                            HStack {
+//                                Text(period.monthString ?? "Jan")
+//                                Text("\(period.year)")
+//                            }
+//                            Text("\(period.monthString ?? "Jan") \(period.year, formatter: dateFormatter)")
+                        }
                     }
-                }
-                .onAppear {
-                    period = getTodaysPeriod() // set the period to today's period
-                    selectedPeriod.period = period // set the period value visible from other view to the value chosen in the picker
-                    selectedPeriod.periodStartDate = period.startdate ?? Date()
-                }
-                .onChange(of: period) { _ in
-                    selectedPeriod.period = period // set the period value visible from other view to the value chosen in the picker
-                    selectedPeriod.periodStartDate = period.startdate ?? Date()
+                    .onAppear {
+                        if(!selectedPeriod.periodChangedManually) { // if the user hasn't modified the period manually yet
+                            period = getTodaysPeriod() // set the period selected in the picker to today's period
+                        }
+                        selectedPeriod.period = period // set the period value visible from other view to the value chosen in the picker
+                        selectedPeriod.periodStartDate = period.startdate ?? Date()
+                    }
+                    .onChange(of: period) { _ in
+                        selectedPeriod.period = period // set the period value visible from other view to the value chosen in the picker
+                        selectedPeriod.periodStartDate = period.startdate ?? Date()
+                        selectedPeriod.periodChangedManually = true // make sure that the period doesnt reset to today's period automatically anymore
+                    }
+                    
+                    nextPeriod
                 }
                 
                 NavigationLink { // link containing the simplified P&L, leading to the ReportingView()
@@ -81,7 +97,7 @@ struct CategoryListView: View {
                     AddCategoryView()
                 }
                 .sheet(isPresented: $addTransactionView) {
-                    AddTransactionView(account: accounts[0], category: categories[0])
+                    AddTransactionView(payee: nil, account: accounts[0], category: categories[0])
                 }
                 .toolbar {
                     ToolbarItem(placement: .navigationBarTrailing) {
@@ -131,10 +147,63 @@ struct CategoryListView: View {
         return Period() // if no period is found, return a new one (because I need to return something in all cases)
     }
     
+    var previousPeriod: some View {
+        Button {
+            var year = Calendar.current.dateComponents([.year], from: period.startdate ?? Date()).year ?? 1900
+            var month = Calendar.current.dateComponents([.month], from: period.startdate ?? Date()).month ?? 1
+            
+            // Decrement the month, or the year and the month:
+            if(month == 1) {
+                year -= 1
+                month = 12
+            }
+            else {
+                month -= 1
+            }
+            
+            for periodFound in periods {
+                if(periodFound.year == year) {
+                    if(periodFound.month == month) {
+                        period = periodFound // set the period selected in the picker to the period that was found
+                        print(period)
+                    }
+                }
+            }
+        } label: {
+            Label("", systemImage: "arrowtriangle.left.fill")
+        }
+    }
+    
+    var nextPeriod: some View {
+        Button {
+            var year = Calendar.current.dateComponents([.year], from: period.startdate ?? Date()).year ?? 1900
+            var month = Calendar.current.dateComponents([.month], from: period.startdate ?? Date()).month ?? 1
+            
+            // Increment the month, or the year and the month:
+            if(month == 12) {
+                year += 1
+                month = 1
+            }
+            else {
+                month += 1
+            }
+            
+            for periodFound in periods {
+                if(periodFound.year == year) {
+                    if(periodFound.month == month) {
+                        period = periodFound // set the period selected in the picker to the period that was found
+                        print(period)
+                    }
+                }
+            }
+        } label: {
+            Label("", systemImage: "arrowtriangle.right.fill")
+        }
+    }
     
     private let dateFormatter: DateFormatter = {
         let formatter = DateFormatter()
-        formatter.dateFormat = "MMM Y"
+        formatter.dateFormat = "MMM yyyy"
         return formatter
     }()
     

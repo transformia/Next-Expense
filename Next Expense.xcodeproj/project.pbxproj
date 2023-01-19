@@ -14,6 +14,8 @@
 		4C11C75328F6B28E002E4441 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 4C11C75228F6B28E002E4441 /* Preview Assets.xcassets */; };
 		4C11C76428F73B74002E4441 /* AddTransactionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C11C76328F73B74002E4441 /* AddTransactionView.swift */; };
 		4C11C76928F74123002E4441 /* TransactionListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C11C76828F74123002E4441 /* TransactionListView.swift */; };
+		4C1465AE2977265F00D641F6 /* PayeeList.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C1465AD2977265F00D641F6 /* PayeeList.swift */; };
+		4C1465B02977E6DE00D641F6 /* AdminView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C1465AF2977E6DE00D641F6 /* AdminView.swift */; };
 		4C45070828F749A000D17558 /* Next_Expense_wOS.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = 4C45070628F749A000D17558 /* Next_Expense_wOS.xcdatamodeld */; };
 		4C45070928F74AD500D17558 /* Persistence.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C11C76528F73DA7002E4441 /* Persistence.swift */; };
 		4C586175291414A3009FD743 /* CategoryGroupListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C586174291414A3009FD743 /* CategoryGroupListView.swift */; };
@@ -23,6 +25,8 @@
 		4C87060D28FD5587003CEAC0 /* CategoryGroupDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C87060C28FD5587003CEAC0 /* CategoryGroupDetailView.swift */; };
 		4C88A01128FF6DEF00C4584C /* BudgetListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C88A01028FF6DEE00C4584C /* BudgetListView.swift */; };
 		4C8CC6B5290771C60025F8D1 /* Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C8CC6B4290771C60025F8D1 /* Extensions.swift */; };
+		4CAD872E29769D7A00EA27B3 /* NumpadView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CAD872D29769D7A00EA27B3 /* NumpadView.swift */; };
+		4CAD873029769D8500EA27B3 /* NumpadKeyView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CAD872F29769D8500EA27B3 /* NumpadKeyView.swift */; };
 		4CC1DA6D29005C97000DCA2F /* NumpadView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CC1DA6C29005C97000DCA2F /* NumpadView.swift */; };
 		4CC1DA6F29005CE6000DCA2F /* NumpadKeyView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CC1DA6E29005CE6000DCA2F /* NumpadKeyView.swift */; };
 		4CDF629228DDEF1E0047C765 /* Next_ExpenseApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CDF629128DDEF1E0047C765 /* Next_ExpenseApp.swift */; };
@@ -46,6 +50,8 @@
 		4CEDD45028F9A2960041BEEA /* ReportingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CEDD44F28F9A2960041BEEA /* ReportingView.swift */; };
 		4CEDD45228F9A3380041BEEA /* CategoryGroupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CEDD45128F9A3380041BEEA /* CategoryGroupView.swift */; };
 		4CEDD45428F9A4230041BEEA /* AddCategoryGroupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CEDD45328F9A4230041BEEA /* AddCategoryGroupView.swift */; };
+		4CFF513C29673A0800F643D6 /* PayeeListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CFF513B29673A0800F643D6 /* PayeeListView.swift */; };
+		4CFF513E29673A9F00F643D6 /* PayeeDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CFF513D29673A9F00F643D6 /* PayeeDetailView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -82,6 +88,8 @@
 		4C11C76328F73B74002E4441 /* AddTransactionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddTransactionView.swift; sourceTree = "<group>"; };
 		4C11C76528F73DA7002E4441 /* Persistence.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Persistence.swift; sourceTree = "<group>"; };
 		4C11C76828F74123002E4441 /* TransactionListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransactionListView.swift; sourceTree = "<group>"; };
+		4C1465AD2977265F00D641F6 /* PayeeList.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PayeeList.swift; sourceTree = "<group>"; };
+		4C1465AF2977E6DE00D641F6 /* AdminView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdminView.swift; sourceTree = "<group>"; };
 		4C45070028F744CE00D17558 /* Next Expense.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "Next Expense.entitlements"; sourceTree = "<group>"; };
 		4C45070128F7461800D17558 /* Next Expense wOS Watch App.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "Next Expense wOS Watch App.entitlements"; sourceTree = "<group>"; };
 		4C45070228F7476D00D17558 /* Next-Expense-wOS-Watch-App-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "Next-Expense-wOS-Watch-App-Info.plist"; sourceTree = SOURCE_ROOT; };
@@ -93,6 +101,8 @@
 		4C87060C28FD5587003CEAC0 /* CategoryGroupDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CategoryGroupDetailView.swift; sourceTree = "<group>"; };
 		4C88A01028FF6DEE00C4584C /* BudgetListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BudgetListView.swift; sourceTree = "<group>"; };
 		4C8CC6B4290771C60025F8D1 /* Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Extensions.swift; sourceTree = "<group>"; };
+		4CAD872D29769D7A00EA27B3 /* NumpadView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NumpadView.swift; sourceTree = "<group>"; };
+		4CAD872F29769D8500EA27B3 /* NumpadKeyView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NumpadKeyView.swift; sourceTree = "<group>"; };
 		4CC1DA6C29005C97000DCA2F /* NumpadView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NumpadView.swift; sourceTree = "<group>"; };
 		4CC1DA6E29005CE6000DCA2F /* NumpadKeyView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NumpadKeyView.swift; sourceTree = "<group>"; };
 		4CDF628E28DDEF1E0047C765 /* Next Expense.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Next Expense.app"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -118,6 +128,8 @@
 		4CEDD44F28F9A2960041BEEA /* ReportingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReportingView.swift; sourceTree = "<group>"; };
 		4CEDD45128F9A3380041BEEA /* CategoryGroupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CategoryGroupView.swift; sourceTree = "<group>"; };
 		4CEDD45328F9A4230041BEEA /* AddCategoryGroupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddCategoryGroupView.swift; sourceTree = "<group>"; };
+		4CFF513B29673A0800F643D6 /* PayeeListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PayeeListView.swift; sourceTree = "<group>"; };
+		4CFF513D29673A9F00F643D6 /* PayeeDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PayeeDetailView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -147,6 +159,8 @@
 				4C11C74D28F6B28D002E4441 /* ContentView.swift */,
 				4C11C76728F73DAD002E4441 /* Core Data */,
 				4C11C76228F73A80002E4441 /* Transactions */,
+				4C1465AC2977264D00D641F6 /* Payees */,
+				4CAD872C29769D4800EA27B3 /* Numpad */,
 				4C11C74F28F6B28E002E4441 /* Assets.xcassets */,
 				4C11C75128F6B28E002E4441 /* Preview Content */,
 			);
@@ -185,8 +199,8 @@
 		4C11C76228F73A80002E4441 /* Transactions */ = {
 			isa = PBXGroup;
 			children = (
-				4C11C76828F74123002E4441 /* TransactionListView.swift */,
 				4C11C76328F73B74002E4441 /* AddTransactionView.swift */,
+				4C11C76828F74123002E4441 /* TransactionListView.swift */,
 			);
 			path = Transactions;
 			sourceTree = "<group>";
@@ -200,15 +214,33 @@
 			path = "Core Data";
 			sourceTree = "<group>";
 		};
+		4C1465AC2977264D00D641F6 /* Payees */ = {
+			isa = PBXGroup;
+			children = (
+				4C1465AD2977265F00D641F6 /* PayeeList.swift */,
+			);
+			path = Payees;
+			sourceTree = "<group>";
+		};
 		4C5D481E28FF54FD0042693C /* Administration */ = {
 			isa = PBXGroup;
 			children = (
+				4C1465AF2977E6DE00D641F6 /* AdminView.swift */,
 				4C5D481F28FF550E0042693C /* PeriodListView.swift */,
 				4C88A01028FF6DEE00C4584C /* BudgetListView.swift */,
 				4C586174291414A3009FD743 /* CategoryGroupListView.swift */,
 				4CE5B6E02916B03900E87B0D /* CSVExportView.swift */,
 			);
 			path = Administration;
+			sourceTree = "<group>";
+		};
+		4CAD872C29769D4800EA27B3 /* Numpad */ = {
+			isa = PBXGroup;
+			children = (
+				4CAD872D29769D7A00EA27B3 /* NumpadView.swift */,
+				4CAD872F29769D8500EA27B3 /* NumpadKeyView.swift */,
+			);
+			path = Numpad;
 			sourceTree = "<group>";
 		};
 		4CC1DA7029005CEA000DCA2F /* Numpad */ = {
@@ -249,6 +281,7 @@
 				4CC1DA7029005CEA000DCA2F /* Numpad */,
 				4C11C75B28F6B2E4002E4441 /* Categories */,
 				4CDF62A628DDF0030047C765 /* Accounts */,
+				4CFF513A296739F000F643D6 /* Payees */,
 				4C11C75C28F6B2FA002E4441 /* Transactions */,
 				4CEDD44E28F9A2540041BEEA /* Reporting */,
 				4C5D481E28FF54FD0042693C /* Administration */,
@@ -299,6 +332,15 @@
 				4C87060A28FD5405003CEAC0 /* AddCategoryToGroupView.swift */,
 			);
 			path = Reporting;
+			sourceTree = "<group>";
+		};
+		4CFF513A296739F000F643D6 /* Payees */ = {
+			isa = PBXGroup;
+			children = (
+				4CFF513B29673A0800F643D6 /* PayeeListView.swift */,
+				4CFF513D29673A9F00F643D6 /* PayeeDetailView.swift */,
+			);
+			path = Payees;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -430,11 +472,14 @@
 			buildActionMask = 2147483647;
 			files = (
 				4C11C74E28F6B28D002E4441 /* ContentView.swift in Sources */,
+				4CAD872E29769D7A00EA27B3 /* NumpadView.swift in Sources */,
+				4C1465AE2977265F00D641F6 /* PayeeList.swift in Sources */,
 				4C45070828F749A000D17558 /* Next_Expense_wOS.xcdatamodeld in Sources */,
 				4C45070928F74AD500D17558 /* Persistence.swift in Sources */,
 				4C11C74C28F6B28D002E4441 /* Next_Expense_wOSApp.swift in Sources */,
 				4C11C76428F73B74002E4441 /* AddTransactionView.swift in Sources */,
 				4C11C76928F74123002E4441 /* TransactionListView.swift in Sources */,
+				4CAD873029769D8500EA27B3 /* NumpadKeyView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -459,6 +504,7 @@
 				4CDF62B028DDF7040047C765 /* AddTransactionView.swift in Sources */,
 				4CDF62BC28DE35740047C765 /* CategoryView.swift in Sources */,
 				4CC1DA6D29005C97000DCA2F /* NumpadView.swift in Sources */,
+				4C1465B02977E6DE00D641F6 /* AdminView.swift in Sources */,
 				4CDF62B228DE0EBD0047C765 /* AccountView.swift in Sources */,
 				4CDF62AE28DDF6FD0047C765 /* TransactionListView.swift in Sources */,
 				4CDF62B428DE1F960047C765 /* TransactionDetailView.swift in Sources */,
@@ -466,8 +512,10 @@
 				4C5D482028FF550E0042693C /* PeriodListView.swift in Sources */,
 				4CEDD45228F9A3380041BEEA /* CategoryGroupView.swift in Sources */,
 				4C8CC6B5290771C60025F8D1 /* Extensions.swift in Sources */,
+				4CFF513E29673A9F00F643D6 /* PayeeDetailView.swift in Sources */,
 				4CDF629E28DDEF200047C765 /* Next_Expense.xcdatamodeld in Sources */,
 				4C87060D28FD5587003CEAC0 /* CategoryGroupDetailView.swift in Sources */,
+				4CFF513C29673A0800F643D6 /* PayeeListView.swift in Sources */,
 				4CDF62B828DE30CE0047C765 /* CategoryDetailView.swift in Sources */,
 				4C87060B28FD5405003CEAC0 /* AddCategoryToGroupView.swift in Sources */,
 			);

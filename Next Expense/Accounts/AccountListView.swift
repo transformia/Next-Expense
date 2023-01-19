@@ -42,7 +42,7 @@ struct AccountListView: View {
                     AddAccountView()
                 }
                 .sheet(isPresented: $addTransactionView) {
-                    AddTransactionView(account: accounts[0], category: categories[0])
+                    AddTransactionView(payee: nil, account: accounts[0], category: categories[0])
                 }
                 .toolbar {
                     ToolbarItem(placement: .navigationBarTrailing) {

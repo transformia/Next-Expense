@@ -122,11 +122,12 @@ struct AccountDetailView: View {
             
 //            deleteButton
             
-            TransactionListView(account: account, category: nil)
+            TransactionListView(payee: nil, account: account, category: nil)
             .sheet(isPresented: $addTransactionView) {
-                AddTransactionView(account: account, category: categories[0])
+                AddTransactionView(payee: nil, account: account, category: categories[0])
             }
             
+            deleteButton
         }
         .sheet(isPresented: $showKeypad) {
             NumpadView(amount: balance)

@@ -41,24 +41,33 @@ struct TransactionDetailView: View {
     
     // Define variables for the transactions's new attributes:
     @State private var date = Date()
+    @State private var recurring = false
+    @State private var recurrence = ""
     @State private var selectedPayee: Payee?
+    @State private var selectedDebtor: Payee?
     @State private var selectedAccount: Account?
     @State private var selectedToAccount: Account?
     @State private var selectedCategory: Category?
     @State private var income = false // tells us the sign of the transaction
     @State private var transfer = false // tells us if this is a transfer between accounts
+    @State private var expense = false // tells us if this is an expense that someone will pay back to us later on
+    @State private var debtorFilter = ""
 //    @State private var amount = 0
     @State private var payeeFilter = ""
     @State private var currency = "EUR"
     @State private var memo = ""
     
     @State private var showingDeleteAlert = false
+    @State private var showingToAccountAlert = false
     
     // Variable determining whether the focus is on the amount text editor or not:
 //    @FocusState private var isFocused: Bool
     
     // Define available currencies:
     let currencies = ["EUR", "SEK"]
+    
+    // Define available recurrences:
+    let recurrences = ["Monthly"]
     
     var body: some View {
         NavigationView { // so that the pickers work
@@ -68,35 +77,37 @@ struct TransactionDetailView: View {
                         .onAppear {
                             date = transaction.date ?? Date()
                         }
-                    Toggle("Income", isOn: $income)
+                    Toggle("Recurring", isOn: $recurring)
                         .onAppear {
-                            income = transaction.income
+                            recurring = transaction.recurring
                         }
-//                    Toggle("Transfer", isOn: $transfer)
-//                        .onAppear {
-//                            transfer = transaction.transfer
-//                        }
-//                    TextField("Amount", value: $amount, formatter: NumberFormatter())
-//                        .keyboardType(.numberPad)
-//                        .onAppear {
-//                            amount = Int(transaction.amount)
-//                        }
-//                        .focused($isFocused)
+                    if(recurring) {
+                        Picker("Recurrence", selection: $recurrence) {
+                            ForEach(recurrences, id: \.self) {
+                                Text($0)
+                            }
+                        }
+                        .onAppear {
+                            recurrence = transaction.recurrence ?? "Monthly"
+                        }
+                    }
+                    if !transfer {
+                        Toggle("Expense", isOn: $expense)
+                            .onAppear {
+                                expense = transaction.expense
+                            }
+                        Toggle("Inflow", isOn: $income)
+                            .onAppear {
+                                income = transaction.income
+                            }
+                    }
+                    Toggle("Transfer", isOn: $transfer)
+                        .onAppear {
+                            transfer = transaction.transfer
+                        }
                     
-//                    ZStack {
-//                        TextField("Amount", value: $amount, formatter: NumberFormatter())
-//                            .keyboardType(.numberPad)
-//                            .focused($isFocused)
-//                            .onAppear {
-//                                amount = Int(transaction.amount)
-//                            }
-//                            .focused($isFocused)
-//                        Text(Double(amount) / 100, format: .currency(code: currency))
-//                            .foregroundColor(income ? .green : .primary)
-//                    }
-                    
-                    Text(Double(amount.intAmount) / 100, format: .currency(code: "EUR")) // amount of the transaction
-                        .foregroundColor(income ? .green : .primary)
+                    Text(Double(amount.intAmount) / 100, format: .currency(code: currency)) // amount of the transaction
+                        .foregroundColor(income || (selectedAccount?.type == "External" && selectedToAccount?.type == "Budget") ? .green : .primary) // green for an income, or for a transfer from an external account to a budget account
                         .onAppear {
                             amount.intAmount = Int(transaction.amount)
                         }
@@ -106,39 +117,74 @@ struct TransactionDetailView: View {
                         }
                 }
                 Group {
-                    TextField("Payee", text: $payeeFilter)
+                    if(!transfer) {
+                        TextField("Payee", text: $payeeFilter)
+                            .onAppear {
+                                payeeFilter = transaction.payee?.name ?? ""
+                                selectedPayee = transaction.payee
+                            }
+                            .focused($payeeFocused)
+                            .onTapGesture {
+                                //                                    withAnimation {
+                                amount.showNumpad = false // hide the custom numpad, so I don't need to tap twice to get to the payee
+                                //                                    }
+                            }
+                        if((payeeFilter != "" && selectedPayee == nil) || (payeeFilter != selectedPayee?.name && payeeFilter != "")) { // display the list of matching payees when I start typing in the text field, until I have selected one. Also do that if I'm trying to modify the payee
+                            List(payees.filter({
+                                payeeFilter == "" ? true: $0.name?.range(of: payeeFilter, options: .caseInsensitive) != nil // filter based on what is typed
+                            }), id: \.self) { payee in
+                                Text(payee.name ?? "")
+                                    .onTapGesture {
+                                        print("Selected \(payee.name ?? "")")
+                                        selectedPayee = payee // select this payee
+                                        selectedCategory = payee.category // set the category to this payee's default category
+                                        payeeFilter = payee.name ?? "" // display the payee in the filter field
+                                    }
+                            }
+                        }
+                    }
+                    
+                    if expense {
+                        TextField("Debtor", text: $debtorFilter)
+                            .onAppear {
+                                debtorFilter = transaction.debtor?.name ?? ""
+                                selectedDebtor = transaction.debtor
+                            }
+//                            .focused($debtorFocused)
+                            .onTapGesture {
+                                //                                    withAnimation {
+                                amount.showNumpad = false // hide the custom numpad, so I don't need to tap twice to get to the debtor
+                                //                                    }
+                            }
+                        if((debtorFilter != "" && selectedDebtor == nil) || (debtorFilter != selectedDebtor?.name && debtorFilter != "")) { // display the list of matching payees when I start typing in the text field, until I have selected one. Also do that if I'm trying to modify the payee
+                            List(payees.filter({
+                                debtorFilter == "" ? true: $0.name?.range(of: debtorFilter, options: .caseInsensitive) != nil // filter based on what is typed
+                            }), id: \.self) { payee in
+                                Text(payee.name ?? "")
+                                    .onTapGesture {
+                                        print("Selected debtor \(payee.name ?? "")")
+                                        selectedDebtor = payee // select this payee
+                                        //                                                selectedCategory = payee.category // set the category to this payee's default category
+                                        //                                                selectedAccount = payee.account // set the account to this payee's default account
+                                        debtorFilter = payee.name ?? "" // display the payee in the filter field
+//                                        debtorFocused = false // hide the keyboard
+                                    }
+                            }
+                        }
+                    }
+                    
+                    if ( (!transfer && selectedAccount?.type == "Budget") || (transfer && selectedAccount?.type != selectedToAccount?.type) ) { // show the category if this is a normal transaction from a budget account, or a transfer between a budget and an external account
+                        Picker("Category", selection: $selectedCategory) {
+                            ForEach(categories, id: \.self) { (category: Category) in
+                                Text(category.name ?? "")
+                                    .tag(category as Category?)
+                            }
+                        }
                         .onAppear {
-                            payeeFilter = transaction.payee?.name ?? ""
-                            selectedPayee = transaction.payee
-                        }
-                        .focused($payeeFocused)
-                        .onTapGesture {
-//                                    withAnimation {
-                            amount.showNumpad = false // hide the custom numpad, so I don't need to tap twice to get to the payee
-//                                    }
-                        }
-                    if((payeeFilter != "" && selectedPayee == nil) || (payeeFilter != selectedPayee?.name && payeeFilter != "")) { // display the list of matching payees when I start typing in the text field, until I have selected one. Also do that if I'm trying to modify the payee
-                        List(payees.filter({
-                            payeeFilter == "" ? true: $0.name?.range(of: payeeFilter, options: .caseInsensitive) != nil // filter based on what is typed
-                        }), id: \.self) { payee in
-                            Text(payee.name ?? "")
-                                .onTapGesture {
-                                    print("Selected \(payee.name ?? "")")
-                                    selectedPayee = payee // select this payee
-                                    selectedCategory = payee.category // set the category to this payee's default category
-                                    payeeFilter = payee.name ?? "" // display the payee in the filter field
-                                }
+                            selectedCategory = transaction.category
                         }
                     }
-                    Picker("Category", selection: $selectedCategory) {
-                        ForEach(categories, id: \.self) { (category: Category) in
-                            Text(category.name ?? "")
-                                .tag(category as Category?)
-                        }
-                    }
-                    .onAppear {
-                        selectedCategory = transaction.category
-                    }                    
+                    
                     Picker("Account", selection: $selectedAccount) {
                         ForEach(accounts, id: \.self) { (account: Account) in
                             Text(account.name ?? "")
@@ -150,15 +196,54 @@ struct TransactionDetailView: View {
                     }
                     .onChange(of: selectedAccount) { _ in
                         currency = selectedAccount?.currency ?? "EUR" // set the currency to the currency of the selected account
-                    }
-                    Picker("Currency", selection: $currency) {
-                        ForEach(currencies, id: \.self) {
-                            Text($0)
+                        
+                        // If I have selected the same account as the to account, or the accounts now have different currencies, change the to account to another account with the same currency, if there is one:
+                        if selectedToAccount == selectedAccount || selectedToAccount?.currency != selectedAccount?.currency {
+                            if accounts.filter({$0.currency == selectedAccount?.currency}).count > 2 { // if there are at least 2 accounts with the same currency as the selected from account
+                                if accounts.filter({$0.currency == selectedAccount?.currency})[0] != selectedAccount {
+                                    selectedToAccount = accounts.filter({$0.currency == selectedAccount?.currency})[0] // if the first account with the same currency is different from the from account, select it
+                                }
+                                else {
+                                    selectedToAccount = accounts.filter({$0.currency == selectedAccount?.currency})[1] // else select the second one
+                                }
+                            }
                         }
                     }
-                    .onAppear {
-                        currency = transaction.currency ?? "EUR"
+                    if(transfer) {
+                        Picker("To account", selection: $selectedToAccount) {
+                            ForEach(accounts, id: \.self) { (account: Account) in
+                                if account.currency == selectedAccount?.currency && account != selectedAccount { // only show destination accounts with the same currency as the selected from account, and don't show the one that is selected in the from account
+                                    Text(account.name ?? "")
+                                        .tag(account as Account?)
+                                }
+                            }
+                        }
+                        .onAppear {
+                            selectedToAccount = transaction.toaccount
+                        }
+                        // NOT NEEDED BECAUSE I CANNOT SELECT A TO ACCOUNT WITH A DIFFERENT CURRENCY, NOR THE SAME AS THE FROM ACCOUNT:
+//                        .onChange(of: selectedToAccount) { _ in
+//                            // If I have selected the same account as the from account, or the accounts now have different currencies, change the from account to another account with the same currency, if there is one:
+//                            if selectedToAccount == selectedAccount || selectedToAccount?.currency != selectedAccount?.currency {
+//                                if accounts.filter({$0.currency == selectedToAccount?.currency}).count > 1 { // if there are at least 2 accounts with the same currency as the selected to account
+//                                    if accounts.filter({$0.currency == selectedToAccount?.currency})[0] != selectedToAccount {
+//                                        selectedAccount = accounts.filter({$0.currency == selectedToAccount?.currency})[0] // if the first account with the same currency is different from the to account, select it
+//                                    }
+//                                    else {
+//                                        selectedAccount = accounts.filter({$0.currency == selectedToAccount?.currency})[1] // else select the second one
+//                                    }
+//                                }
+//                            }
+//                        }
                     }
+//                    Picker("Currency", selection: $currency) {
+//                        ForEach(currencies, id: \.self) {
+//                            Text($0)
+//                        }
+//                    }
+//                    .onAppear {
+//                        currency = transaction.currency ?? "EUR"
+//                    }
                     TextField("Memo", text: $memo)
                         .onAppear {
                             memo = transaction.memo ?? ""
@@ -193,35 +278,76 @@ struct TransactionDetailView: View {
     
     var saveButton: some View {
         Button {
-            if((payeeFilter != "" && selectedPayee == nil) || (payeeFilter != selectedPayee?.name && payeeFilter != "")) { // if a payee has been entered, but none has been selected, create a new payee. Also do that if the payee that has been typed isn't the one that was previously selected, so that I can create a new payee on an existing transaction
-                let payee = Payee(context: viewContext)
-                payee.id = UUID()
-                payee.name = payeeFilter
-                payee.category = selectedCategory
-                selectedPayee = payee
+            
+            // If the account and the to account are identical, or the two accounts have different currencies, show an alert:
+            if selectedAccount == selectedToAccount || selectedAccount?.currency != selectedToAccount?.currency {
+                showingToAccountAlert = true
             }
             
-            else if(selectedPayee != nil) {
-                selectedPayee?.category = selectedCategory // if a payee has been selected, change its default category to the one I used this time
-            }
-            
-//            transaction.timestamp = Date() // don't change the timestamp, as it changes the order of the transactions
-            transaction.date = date
-            transaction.period = getPeriod(date: date)
-            transaction.payee = selectedPayee
-            transaction.category = selectedCategory
-            transaction.amount = Int64(amount.intAmount) // save amount as an int, i.e. 2560 means 25,60€ for example
-            transaction.income = income // save the direction of the transaction, true for an income, false for an expense
-//            transaction.transfer = transfer // save the information of whether or not this is a transfer - not needed, as I can't change it
-            transaction.currency = currency
-            transaction.memo = memo
-            transaction.account = selectedAccount
-            
+            else { // is the accounts are different and have the same currency, save the change
                 
-            PersistenceController.shared.save() // save the change
-            dismiss()
+                // Create a new payee if necessary:
+                if((payeeFilter != "" && selectedPayee == nil) || (payeeFilter != selectedPayee?.name && payeeFilter != "")) { // if a payee has been entered, but none has been selected, create a new payee. Also do that if the payee that has been typed isn't the one that was previously selected, so that I can create a new payee on an existing transaction
+                    let payee = Payee(context: viewContext)
+                    payee.id = UUID()
+                    payee.name = payeeFilter
+                    payee.category = selectedCategory
+                    selectedPayee = payee
+                }
+                
+                // Else change the default account and category of the payee:
+                else if(selectedPayee != nil) {
+                    selectedPayee?.category = selectedCategory // if a payee has been selected, change its default category to the one I used this time
+                }
+                
+                // Create a new payee for the debtor if necessary:
+                if((debtorFilter != "" && selectedDebtor == nil) || (debtorFilter != selectedDebtor?.name && debtorFilter != "")) { // if a debtor has been entered, but none has been selected, create a new payee. Also do that if I selected a debtor, then changed my mind and typed a completely new one
+                    let payee = Payee(context: viewContext)
+                    payee.id = UUID()
+                    payee.name = debtorFilter
+                    selectedDebtor = payee
+                }
+                
+                let period = getPeriod(date: date)
+                
+                //            transaction.populate(date: date, period: period, recurring: recurring, recurrence: recurrence, income: income, amount: amount.intAmount, currency: currency, payee: selectedPayee, category: selectedCategory, account: selectedAccount ?? Account(), transfer: transfer, toAccount: selectedToAccount, expense: expense, debtor: selectedDebtor, memo: memo)
+                
+                transaction.populate(account: selectedAccount ?? Account(), date: date, period: period, payee: selectedPayee, category: selectedCategory, memo: memo, amount: amount.intAmount, currency: currency, income: income, transfer: transfer, toAccount: selectedToAccount, expense: expense, debtor: selectedDebtor, recurring: recurring, recurrence: recurrence)
+                
+                //            transaction.timestamp = Date() // don't change the timestamp, as it changes the order of the transactions
+                //            transaction.date = date
+                //            transaction.period = getPeriod(date: date)
+                //            transaction.recurring = recurring
+                //            transaction.recurrence = recurrence
+                //            if(!transfer) {
+                //                transaction.payee = selectedPayee
+                //                transaction.category = selectedCategory
+                //            }
+                //            else {
+                //                transaction.payee = nil
+                //                transaction.category = nil
+                //            }
+                //            transaction.amount = Int64(amount.intAmount) // save amount as an int, i.e. 2560 means 25,60€ for example
+                //            transaction.income = income // save the direction of the transaction, true for an income, false for an expense
+                //            transaction.transfer = transfer // save the information of whether or not this is a transfer
+                //            transaction.currency = currency
+                //            transaction.memo = memo
+                //            transaction.account = selectedAccount
+                //            if(transfer) {
+                //                transaction.toaccount = selectedToAccount
+                //            }
+                //            else {
+                //                transaction.toaccount = nil
+                //            }
+                
+                PersistenceController.shared.save() // save the change
+                dismiss()
+            }
         } label : {
             Label("Save", systemImage: "opticaldiscdrive.fill")
+        }
+        .alert("Please select two different accounts with the same currency", isPresented: $showingToAccountAlert) {
+            Button("OK", role: .cancel) { }
         }
     }
     

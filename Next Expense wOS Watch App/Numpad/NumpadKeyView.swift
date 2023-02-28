@@ -1,14 +1,14 @@
 //
 //  NumpadKeyView.swift
-//  Next Expense
+//  Next Expense wOS Watch App
 //
-//  Created by Michael Frisk on 2022-10-19.
+//  Created by Michael Frisk on 2023-01-17.
 //
 
 import SwiftUI
 
 struct NumpadKeyView: View {
-
+    
     @ObservedObject var amount: AddTransactionView.Amount // the amount being edited
     
     let key: Int
@@ -19,7 +19,7 @@ struct NumpadKeyView: View {
             configuration.label
                 .padding()
                 .foregroundColor(.white)
-                .frame(width: 80, height: 50)
+                .frame(width: 60, height: 30)
 //                .background(configuration.isPressed ? Color.gray : Color.blue)
                 .background(configuration.isPressed ? Color.gray : Color.black.opacity(0.1))
 //                .background(configuration.isPressed ? Color.gray : Color.black.opacity(0))
@@ -28,28 +28,18 @@ struct NumpadKeyView: View {
         }
     }
     
+    
     var body: some View {
         Button(action: {
-            let impactMed = UIImpactFeedbackGenerator(style: .medium) // haptic feedback
-            impactMed.impactOccurred() // haptic feedback
-            
             switch(specialKey) {
             case "":
-                if(amount.intAmount < 100000000000) { // stop accepting new digits when the amount is above one billion
+                if(amount.intAmount < 100000000) { // stop accepting new digits when the amount is above one billion (less on Apple watch, otherwise doesn't compile for some reason)
                     amount.intAmount = amount.intAmount * 10 + Int(key)
                 }
             case "Backspace":
                 amount.intAmount = amount.intAmount / 10
-            case "Clear":
-                amount.intAmount = 0
             case "Done":
                 amount.showNumpad = false
-            case "-":
-                print("Minus")
-            case "+":
-                print("Plus")
-            case "=":
-                print("Equal")
             default:
                 print("Undefined")
             }
@@ -61,25 +51,10 @@ struct NumpadKeyView: View {
             case "Backspace":
                 Image(systemName: "delete.backward")
                     .foregroundColor(.cyan)
-            case "Clear":
-                Image(systemName: "xmark")
-                    .foregroundColor(.cyan)
             case "Done":
                 Image(systemName: "checkmark")
                     .font(.title)
                     .foregroundColor(.green)
-            case "-":
-                Text("-")
-                    .font(.title)
-                    .foregroundColor(.cyan)
-            case "+":
-                Text("+")
-                    .font(.title)
-                    .foregroundColor(.cyan)
-            case "=":
-                Text("=")
-                    .font(.title)
-                    .foregroundColor(.cyan)
             default:
                 Text("")
                     .font(.title)

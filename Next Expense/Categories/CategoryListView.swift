@@ -26,111 +26,206 @@ struct CategoryListView: View {
     private var periods: FetchedResults<Period> // to be able to select the active period
     
     @FetchRequest(
-        sortDescriptors: [NSSortDescriptor(keyPath: \Budget.id, ascending: true)],
+        sortDescriptors: [NSSortDescriptor(keyPath: \Transaction.timestamp, ascending: true)],
         animation: .default)
-    private var budgets: FetchedResults<Budget> // to be able to calculate the budget per category
+    private var transactions: FetchedResults<Transaction> // to be able to find the last edited transaction, and show an animation for its category balance
     
     @State private var addCategoryView = false // determines whether that view is displayed or not
-    
+        
     @State private var addTransactionView = false // determines whether that view is displayed or not
+    
+    @State private var fxRateView = false // determines whether that view is displayed or not
+    
+    @State private var settingsView = false // determines whether that view is displayed or not
     
     @State private var period = Period() // period (month) selected in the picker
     
-    class SelectedPeriod: ObservableObject {
-        @Published var period = Period()
-        @Published var periodStartDate = Date()
-        @Published var periodChangedManually = false // detects whether the user has changed period manually, so that the onAppear doesn't reset the period to today's period once it has been changed
-    }
-    @StateObject var selectedPeriod = SelectedPeriod() // period visible from other views
+//    class SelectedPeriod: ObservableObject {
+//        @Published var period = Period()
+//        @Published var periodStartDate = Date()
+//        @Published var periodChangedManually = false // detects whether the user has changed period manually, so that the onAppear doesn't reset the period to today's period once it has been changed
+//    }
+//    @StateObject var selectedPeriod = SelectedPeriod() // period visible from other views
+    
+    @EnvironmentObject var selectedPeriod: ContentView.SelectedPeriod // get the selected period from the environment
+    
+    @EnvironmentObject var periodBalances: ContentView.PeriodBalances // get the period balances from the environment - to be able to show an animation when a category balance changes
+    
     
     var body: some View {
-        NavigationView {
-            VStack {
-                
-                HStack {
-                    previousPeriod
+        ZStack { // to be able to show an animation on top when a category balances changes
+            
+            NavigationView {
+                VStack {
                     
-                    Picker("Period", selection: $period) {
-                        ForEach(periods, id: \.self) { period in
-                            Text(period.startdate ?? Date(), formatter: dateFormatter)
-//                            HStack {
-//                                Text(period.monthString ?? "Jan")
-//                                Text("\(period.year)")
-//                            }
-//                            Text("\(period.monthString ?? "Jan") \(period.year, formatter: dateFormatter)")
+                    HStack {
+                        previousPeriod
+                        
+                        Picker("Period", selection: $period) {
+                            ForEach(periods, id: \.self) { period in
+                                Text(period.startdate ?? Date(), formatter: dateFormatter)
+                                //                            HStack {
+                                //                                Text(period.monthString ?? "Jan")
+                                //                                Text("\(period.year)")
+                                //                            }
+                                //                            Text("\(period.monthString ?? "Jan") \(period.year, formatter: dateFormatter)")
+                            }
                         }
-                    }
-                    .onAppear {
-                        if(!selectedPeriod.periodChangedManually) { // if the user hasn't modified the period manually yet
-                            period = getTodaysPeriod() // set the period selected in the picker to today's period
+                        .onAppear {
+                            if(!selectedPeriod.periodChangedManually) { // if the user hasn't modified the period manually yet
+                                period = getTodaysPeriod() // set the period selected in the picker to today's period
+                            }
+                            selectedPeriod.period = period // set the period value visible from other view to the value chosen in the picker
+                            selectedPeriod.periodStartDate = period.startdate ?? Date()
                         }
-                        selectedPeriod.period = period // set the period value visible from other view to the value chosen in the picker
-                        selectedPeriod.periodStartDate = period.startdate ?? Date()
-                    }
-                    .onChange(of: period) { _ in
-                        selectedPeriod.period = period // set the period value visible from other view to the value chosen in the picker
-                        selectedPeriod.periodStartDate = period.startdate ?? Date()
-                        selectedPeriod.periodChangedManually = true // make sure that the period doesnt reset to today's period automatically anymore
+                        .onChange(of: period) { _ in
+                            selectedPeriod.period = period // set the period value visible from other view to the value chosen in the picker
+                            selectedPeriod.periodStartDate = period.startdate ?? Date()
+                            selectedPeriod.periodChangedManually = true // make sure that the period doesnt reset to today's period automatically anymore
+                        }
+                        
+                        nextPeriod
                     }
                     
-                    nextPeriod
-                }
-                
-                NavigationLink { // link containing the simplified P&L, leading to the ReportingView()
-                    ReportingView(selectedPeriod: selectedPeriod)
-                } label: {
-                    MiniReportingView(selectedPeriod: selectedPeriod)
-                }
-                .buttonStyle(PlainButtonStyle()) // remove blue color from the link
-                
-                List {
-                    ForEach(categories) { category in
-                        NavigationLink {
-                            CategoryDetailView(category: category)
-                        } label: {
-                            CategoryView(category: category,selectedPeriod: selectedPeriod)
+                    NavigationLink { // link containing the simplified P&L, leading to the ReportingView()
+                        ReportingView()
+                    } label: {
+                        MiniReportingView()
+                    }
+                    .buttonStyle(PlainButtonStyle()) // remove blue color from the link
+                    
+                    List {
+                        ForEach(categories) { category in
+                            NavigationLink {
+                                CategoryDetailView(category: category)
+                            } label: {
+                                CategoryView(category: category)
+                            }
+                        }
+                        .onMove(perform: moveItem)
+                    }
+                    .padding(EdgeInsets(top: 0, leading: -10, bottom: 0, trailing: -10)) // reduce side padding of the list items
+                    .sheet(isPresented: $addCategoryView) {
+                        AddCategoryView()
+                    }
+                    .sheet(isPresented: $addTransactionView) {
+                        AddTransactionView(payee: nil, account: accounts[0], category: categories[0])
+                    }
+                    .sheet(isPresented: $settingsView) {
+                        SettingsView()
+                    }
+                    .sheet(isPresented: $fxRateView) {
+                        FxRateView()
+                    }
+                    .toolbar {
+                        ToolbarItem(placement: .navigationBarLeading) {
+                            HStack {
+                                Button {
+                                    settingsView.toggle()
+                                } label: {
+                                    Image(systemName: "gear")
+                                }
+                                Button {
+                                    fxRateView.toggle()
+                                } label: {
+                                    Image(systemName: "dollarsign.arrow.circlepath")
+                                }
+                            }
+                        }
+                        ToolbarItem(placement: .navigationBarTrailing) {
+                            EditButton()
+                        }
+                        ToolbarItem(placement: .navigationBarTrailing) {
+                            Button {
+                                addCategoryView.toggle() // show the view where I can add a new element
+                            } label: {
+                                Image(systemName: "plus")
+                            }
                         }
                     }
-                    .onMove(perform: moveItem)
-                }
-                .sheet(isPresented: $addCategoryView) {
-                    AddCategoryView()
-                }
-                .sheet(isPresented: $addTransactionView) {
-                    AddTransactionView(payee: nil, account: accounts[0], category: categories[0])
-                }
-                .toolbar {
-                    ToolbarItem(placement: .navigationBarTrailing) {
-                        EditButton()
-                    }
-                    ToolbarItem(placement: .navigationBarTrailing) {
-                        Button {
-                            addCategoryView.toggle() // show the view where I can add a new element
-                        } label: {
-                            Image(systemName: "plus")
+                    
+                    Button {
+                        if(categories.count > 0 && accounts.count > 0) {
+                            addTransactionView.toggle() // show the view where I can add a new element
                         }
+                        else {
+                            print("You need to create at least one account and one category before you can create a transaction")
+                        }
+                    } label: {
+                        Image(systemName: "plus")
+                            .resizable()
+                            .frame(width: 18, height: 18)
+                            .foregroundColor(.white)
+                            .padding(6)
+                            .background(.green)
+                            .clipShape(Circle())
                     }
+                    .padding(.bottom, 20.0)
                 }
-                
-                Button {
-                    if(categories.count > 0 && accounts.count > 0) {
-                        addTransactionView.toggle() // show the view where I can add a new element
-                    }
-                    else {
-                        print("You need to create at least one account and one category before you can create a transaction")
-                    }
-                } label: {
-                    Image(systemName: "plus")
-                        .resizable()
-                        .frame(width: 18, height: 18)
-                        .foregroundColor(.white)
-                        .padding(6)
-                        .background(.green)
-                        .clipShape(Circle())
-                }
-                .padding(.bottom, 20.0)
+                .navigationTitle("Budget")
+                .navigationBarTitleDisplayMode(.inline)
             }
-        }
+            
+            if(periodBalances.showBalanceAnimation) { // show the update of the category balance for x seconds
+                if !periodBalances.balanceAfter { // showing the balance before the transaction
+                    HStack {
+                        Text(periodBalances.category.name ?? "")
+                        Text(periodBalances.remainingBudgetBefore / 100, format: .currency(code: "EUR"))
+                    }
+                    .padding()
+                    .foregroundColor(periodBalances.remainingBudgetBefore > 0 ? .black : .white)
+                    .bold()
+                    .background(periodBalances.remainingBudgetBefore > 0 ? .green : .red)
+                    .clipShape(Capsule())
+                    .onAppear {
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 1.50) { // make it change after x seconds
+                            periodBalances.balanceAfter = true
+                        }
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 3.00) { // make it disappear after x seconds
+                            periodBalances.showBalanceAnimation = false
+                            periodBalances.balanceAfter = false
+                        }
+                    }
+                }
+                
+                else { // showing the balance after the transaction
+                    HStack {
+                        Text(periodBalances.category.name ?? "")
+                        Text(periodBalances.category.calcRemainingBudget(period: selectedPeriod.period) / 100, format: .currency(code: "EUR"))
+                    }
+                    .padding()
+                    .foregroundColor(periodBalances.category.calcRemainingBudget(period: selectedPeriod.period) > 0 ? .black : .white)
+                    .bold()
+                    .background(periodBalances.category.calcRemainingBudget(period: selectedPeriod.period) > 0 ? .green : .red)
+                    .clipShape(Capsule())
+                }
+                    
+//                HStack {
+//                    Text(periodBalances.category.name ?? "")
+//                    if !periodBalances.balanceAfter {
+//                        Text(periodBalances.remainingBudgetBefore / 100, format: .currency(code: "EUR"))
+//                    }
+//                    else {
+//                        Text(periodBalances.category.calcRemainingBudget(period: selectedPeriod.period) / 100, format: .currency(code: "EUR"))
+//                    }
+//                }
+//                .padding()
+//                .foregroundColor(periodBalances.remainingBudgetBefore > 0 ? .black : .white)
+//                .bold()
+//                .background(.green)
+//                .clipShape(Capsule())
+//                .onAppear {
+//                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.50) { // make it change after x seconds
+//                        periodBalances.balanceAfter = true
+//                    }
+//                    DispatchQueue.main.asyncAfter(deadline: .now() + 3.00) { // make it disappear after x seconds
+//                        periodBalances.showBalanceAnimation = false
+//                        periodBalances.balanceAfter = false
+//                    }
+//                }
+            }
+            
+        } // end of ZStack
     }
     
     private func getTodaysPeriod() -> Period { // get the period corresponding to today's date
@@ -165,7 +260,7 @@ struct CategoryListView: View {
                 if(periodFound.year == year) {
                     if(periodFound.month == month) {
                         period = periodFound // set the period selected in the picker to the period that was found
-                        print(period)
+//                        print(period)
                     }
                 }
             }
@@ -192,7 +287,7 @@ struct CategoryListView: View {
                 if(periodFound.year == year) {
                     if(periodFound.month == month) {
                         period = periodFound // set the period selected in the picker to the period that was found
-                        print(period)
+//                        print(period)
                     }
                 }
             }

@@ -22,8 +22,10 @@ struct AccountView: View {
     var body: some View {
         HStack {
             Text(account.name ?? "")
+                .padding(.leading, 25) // to align it with the Budget and External headings
             Spacer()
             Text(Double(balance) / 100, format: .currency(code: account.currency ?? "EUR"))
+                .font(.callout)
                 .onAppear {
                     balance = account.calcBalance(toDate: Date())
                 }

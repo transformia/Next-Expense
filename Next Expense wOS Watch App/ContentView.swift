@@ -28,7 +28,7 @@ struct ContentView: View {
     var body: some View {
         
         TabView {
-            PayeeList()
+//            PayeeList()
             AddTransactionView()
             TransactionListView()
         }

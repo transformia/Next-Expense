@@ -20,9 +20,13 @@ struct AddAccountView: View {
     // Define variables for the new account's attributes:
     @State private var name = ""
     @State private var currency = "EUR"
+    @State private var type = "Budget" // tells us the type of the account
     
     // Define available currencies:
     let currencies = ["EUR", "SEK"]
+    
+    // Define category types:
+    let types = ["Budget", "External"]
     
     var body: some View {
         NavigationView { // so that the pickers work
@@ -30,6 +34,11 @@ struct AddAccountView: View {
                 TextField("Account name", text: $name)
                 Picker("Currency", selection: $currency) {
                     ForEach(currencies, id: \.self) {
+                        Text($0)
+                    }
+                }
+                Picker("Account type", selection: $type) {
+                    ForEach(types, id: \.self) {
                         Text($0)
                     }
                 }
@@ -45,6 +54,7 @@ struct AddAccountView: View {
             account.id = UUID()
             account.name = name
             account.currency = currency
+            account.type = type
             account.order = (accounts.last?.order ?? 0) + 1
             
             PersistenceController.shared.save() // save the item

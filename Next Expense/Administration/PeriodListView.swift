@@ -17,29 +17,38 @@ struct PeriodListView: View {
     
     var body: some View {
         VStack {
-            Button( action: {
-                clearPeriods()
-            }, label: {
-                Text("Clear all periods")
-            })
+//            Button( action: {
+//                clearPeriods()
+//            }, label: {
+//                Text("Clear all periods")
+//            })
             List {
                 ForEach(periods) { period in
-                    Text("\(period.startdate ?? Date())")
-                    HStack {
-                        Text(yearFormatter.string(from: period.year as NSNumber) ?? "None")
-                        Text("\(period.month)")
-                        Text(period.monthString ?? "None")
-                    }
+                    PeriodView(period: period)
                 }
+                .onDelete(perform: deletePeriod)
+            }
+        }
+        .toolbar {
+            ToolbarItem {
+                EditButton()
             }
         }
     }
     
-    private let yearFormatter: NumberFormatter = {
-        let formatter = NumberFormatter()
-        formatter.numberStyle = .none
-        return formatter
-    }()
+    private func deletePeriod(at offsets: IndexSet) {
+        for index in offsets {
+            let period = periods[index]
+            if period.transactions?.count == 0 {
+                viewContext.delete(period)
+            }
+            else {
+                print("This period has transactions. It cannot be deleted")
+            }
+        }
+        
+        PersistenceController.shared.save() // save the changes
+    }
     
     private func clearPeriods() {
         print("Clearing all periods")

@@ -25,19 +25,63 @@ struct AccountListView: View {
     
     @State private var addTransactionView = false // determines whether that view is displayed or not
     
+    @State private var showBudgetAccounts = true
+    @State private var showExternalAccounts = true
+    
     var body: some View {
         NavigationView {
             VStack {
                 List {
-                    ForEach(accounts) { account in
-                        NavigationLink {
-                            AccountDetailView(account: account)
-                        } label : {
-                            AccountView(account: account)
+                    
+                    HStack {
+                        Image(systemName: showBudgetAccounts ? "arrowtriangle.down.fill" : "arrowtriangle.right.fill")
+                        Text("Budget")
+                            .font(.headline)
+                    }
+                    .onTapGesture {
+                        withAnimation {
+                            showBudgetAccounts.toggle()
                         }
                     }
-                    .onMove(perform: moveItem)
+                    
+                    if showBudgetAccounts {
+                        ForEach(accounts) { account in
+                            if account.type == "Budget" {
+                                NavigationLink {
+                                    AccountDetailView(account: account)
+                                } label : {
+                                    AccountView(account: account)
+                                }
+                            }
+                        }
+                        .onMove(perform: moveItem)
+                    }
+                    
+                    HStack {
+                        Image(systemName: showExternalAccounts ? "arrowtriangle.down.fill" : "arrowtriangle.right.fill")
+                        Text("External")
+                            .font(.headline)
+                    }
+                    .onTapGesture {
+                        withAnimation {
+                            showExternalAccounts.toggle()
+                        }
+                    }
+                    
+                    if showExternalAccounts {
+                        ForEach(accounts) { account in
+                            if account.type == "External" {
+                                NavigationLink {
+                                    AccountDetailView(account: account)
+                                } label : {
+                                    AccountView(account: account)
+                                }
+                            }
+                        }
+                        .onMove(perform: moveItem)
+                    }
                 }
+                .padding(EdgeInsets(top: 0, leading: -10, bottom: 0, trailing: -10)) // reduce side padding of the list items
                 .sheet(isPresented: $addAccountView) {
                     AddAccountView()
                 }
@@ -75,6 +119,8 @@ struct AccountListView: View {
                 }
                 .padding(.bottom, 20.0)
             }
+            .navigationTitle("Accounts")
+            .navigationBarTitleDisplayMode(.inline)
         }
     }
     

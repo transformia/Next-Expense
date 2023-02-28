@@ -33,6 +33,13 @@ struct AdminView: View {
             } label: {
                 Label("Clear transactions", systemImage: "xmark.circle.fill")
             }
+            
+//            Button {
+//                clearAllTransactions()
+//                
+//            } label: {
+//                Label("Clear ALL transactions", systemImage: "xmark.circle.fill")
+//            }
         }
     }
     
@@ -47,6 +54,16 @@ struct AdminView: View {
                 viewContext.delete(transaction)
                 PersistenceController.shared.save() // save the change
             }
+        }
+    }
+    
+    func clearAllTransactions() {
+        print("Clearing all transactions")
+        if(transactions.count > 0) {
+            for i in 0 ... transactions.count - 1 {
+                viewContext.delete(transactions[i])
+            }
+            PersistenceController.shared.save() // save the changes
         }
     }
 }

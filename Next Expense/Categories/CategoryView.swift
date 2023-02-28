@@ -15,9 +15,16 @@ struct CategoryView: View {
         animation: .default)
     private var transactions: FetchedResults<Transaction> // to be able to calculate the category balance
     
+    @FetchRequest(
+        sortDescriptors: [NSSortDescriptor(keyPath: \Budget.id, ascending: true)],
+        animation: .default)
+    private var budgets: FetchedResults<Budget> // to be able to calculate the total budgets for the period
+    
     let category: Category
     
-    @ObservedObject var selectedPeriod: CategoryListView.SelectedPeriod // the period selected in CategoryListView
+    @EnvironmentObject var selectedPeriod: ContentView.SelectedPeriod // get the selected period from the environment
+    
+    @EnvironmentObject var periodBalances: ContentView.PeriodBalances // get the period balances from the environment
     
     @State private var categoryBalance = 0.0
     
@@ -39,6 +46,10 @@ struct CategoryView: View {
                 }
                 .onChange(of: categoryBudget.intAmount) { _ in
                     saveBudget()
+                    // Calculate the period budgets - done in MiniReportingView and CategoryView:
+                    (periodBalances.incomeBudget, periodBalances.expensesBudget) = selectedPeriod.period.calcBudgets()
+//                    periodBalances.incomeBudget = monthlyBudgets().0
+//                    periodBalances.expensesBudget = monthlyBudgets().1
                 }
                 .onTapGesture {
                     categoryBudget.showNumpad.toggle()
@@ -52,8 +63,10 @@ struct CategoryView: View {
                 .onAppear {
                     categoryBalance = category.calcBalance(period: selectedPeriod.period)
                 }
+                .onChange(of: periodBalances.expensesActual) { _ in
+                    categoryBalance = category.calcBalance(period: selectedPeriod.period)
+                }
                 .onChange(of: selectedPeriod.period) { _ in
-//                    categoryBalance = category.income ? category.calcBalance(period: selectedPeriod.period) : -category.calcBalance(period: selectedPeriod.period)
                     categoryBalance = category.calcBalance(period: selectedPeriod.period)
                 }
                 .font(.caption)
@@ -88,9 +101,14 @@ struct CategoryView: View {
         if(category.budgets?.count ?? 0 > 0) { // if there is already a budget for this category and period, update it
             for budget in category.budgets ?? [] {
                 if((budget as! Budget).period == selectedPeriod.period) {
-                    print("Budget already exists. Updating it to \(categoryBudget)")
-                    (budget as! Budget).amount = Int64(categoryBudget.intAmount) // update the budget
-                    PersistenceController.shared.save() // save the changes
+                    if (budget as! Budget).amount != Int64(categoryBudget.intAmount) {
+                        print("Budget already exists, and has changed. Updating it to \(Double(categoryBudget.intAmount) / 100)")
+                        (budget as! Budget).amount = Int64(categoryBudget.intAmount) // update the budget
+                        PersistenceController.shared.save() // save the changes
+                    }
+                    else {
+                        print("Budget already exists, but is unchanged")
+                    }
                     return
                 }
             }

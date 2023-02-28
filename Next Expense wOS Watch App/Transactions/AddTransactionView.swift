@@ -31,7 +31,7 @@ struct AddTransactionView: View {
     private var periods: FetchedResults<Period> // to determine the period of the transaction
     
     // Define variables for the new transactions's attributes:
-    @State private var date = Date()
+//    @State private var date = Date()
     @State private var selectedPayee: Payee?
     @State private var selectedAccount: Account?
     @State private var selectedCategory: Category?
@@ -42,6 +42,7 @@ struct AddTransactionView: View {
     @State private var memo = ""
     
     @State private var showingAlert = false
+    @State private var showingConfirmation = false
     
     class Amount: ObservableObject {
         @Published var intAmount = 0
@@ -64,6 +65,7 @@ struct AddTransactionView: View {
                 Toggle("Income", isOn: $income)
                 
                 TextField("Payee", text: $payeeFilter)
+                    .disableAutocorrection(true)
                 //                .focused($payeeFocused)
                 
                 if((payeeFilter != "" && selectedPayee == nil) || (payeeFilter != selectedPayee?.name && payeeFilter != "")) { // display the list of matching payees when I start typing in the text field, until I have selected one. Also do that if I'm trying to modify the payee
@@ -154,8 +156,8 @@ struct AddTransactionView: View {
                     
                     transaction.id = UUID()
                     transaction.timestamp = Date()
-                    transaction.date = date
-                    transaction.period = getPeriod(date: date)
+                    transaction.date = Date()
+                    transaction.period = getPeriod(date: Date())
                     transaction.payee = selectedPayee
                     transaction.category = selectedCategory
                     transaction.amount = Int64(amount.intAmount) // save amount as an int, i.e. 2560 means 25,60€ for example
@@ -169,12 +171,16 @@ struct AddTransactionView: View {
                     
                     amount.intAmount = 0 // clear the amount after saving
                     payeeFilter = "" // clear the payee after saving
+                    showingConfirmation = true
                 }
             }
         }, label: {
             Label("Create", systemImage: "opticaldiscdrive.fill")
         })
         .alert("Category or account missing", isPresented: $showingAlert) {
+            Button("OK", role: .cancel) { }
+        }
+        .alert("Transation created", isPresented: $showingConfirmation) {
             Button("OK", role: .cancel) { }
         }
     }

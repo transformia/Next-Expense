@@ -31,6 +31,12 @@ struct AccountDetailView: View {
     
     let account: Account // element to display
     
+    @State private var name = ""
+    @State private var type = "Budget" // tells us the type of the category
+    
+    // Define category types:
+    let types = ["Budget", "External"]
+    
 //    @State private var balance = 0.0
     @StateObject var balance = AddTransactionView.Amount()
     
@@ -43,11 +49,45 @@ struct AccountDetailView: View {
     // Variable determining whether the custom keypad is shown or not:
     @State private var showKeypad = false
     
+    @FocusState var isFocused: Bool // determines whether the focus is on the text field or not
+    
     var body: some View {
         VStack {
+            HStack {
+                TextField("", text: $name)
+                    .font(.title)
+                    .focused($isFocused)
+                    .autocorrectionDisabled()
+                    .multilineTextAlignment(.center)
+                    .onAppear {
+                        name = account.name ?? ""
+                    }
+                if name != account.name { // if I have modified the name, show a button to save the change
+                    Image(systemName: "opticaldiscdrive")
+                        .foregroundColor(.blue)
+                        .onTapGesture {
+                            account.name = name
+                            PersistenceController.shared.save()
+                            isFocused = false
+                        }
+                }
+            }
             
-            Text(account.name ?? "")
-                .font(.title)
+            // Don't allow me to change this for now:
+//            HStack {
+//                Picker("Account type", selection: $type) {
+//                    ForEach(types, id: \.self) {
+//                        Text($0)
+//                    }
+//                }
+//                .onAppear {
+//                    type = account.type ?? ""
+//                }
+//                .onChange(of: type) { _ in
+//                    account.type = type
+//                    PersistenceController.shared.save()
+//                }
+//            }
             HStack {
                 Text("Balance")
                     .font(.headline)
@@ -104,6 +144,20 @@ struct AccountDetailView: View {
                     .tint(.green)
                 }
             }
+            
+            // Show button to delete the account if it has no transactions:
+            if transactions.filter({$0.account == account}).count == 0 {
+                Button(role: .destructive) {
+                    print("Deleting account \(account.name ?? "")")
+                    viewContext.delete(account)
+                    PersistenceController.shared.save() // save the change
+                    dismiss()
+                } label: {
+                    Label("Delete account", systemImage: "trash")
+                }
+                .padding()
+            }
+            
 //                .onTapGesture {
 //                    showingReconciliationAlert = true
 //                }
@@ -121,13 +175,13 @@ struct AccountDetailView: View {
 //            Spacer()
             
 //            deleteButton
-            
+                        
             TransactionListView(payee: nil, account: account, category: nil)
             .sheet(isPresented: $addTransactionView) {
                 AddTransactionView(payee: nil, account: account, category: categories[0])
             }
             
-            deleteButton
+//            deleteButton
         }
         .sheet(isPresented: $showKeypad) {
             NumpadView(amount: balance)
@@ -157,7 +211,7 @@ struct AccountDetailView: View {
         }
     }
     
-    private func getPeriod(date: Date) -> Period { // get the period corresponding to the chosen date
+    private func getPeriod(date: Date) -> Period { // get the period corresponding to the chosen date. Exists in AccountDetailView, AddTransactionView, MiniReportingView, ReportingView, FxRateView, CSVExportView, DebtorView, ...?
         let year = Calendar.current.dateComponents([.year], from: date).year ?? 1900
         let month = Calendar.current.dateComponents([.month], from: date).month ?? 1
         

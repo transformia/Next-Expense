@@ -18,9 +18,9 @@ struct NumpadView: View {
             
             VStack {
                 HStack {
-                    NumpadKeyView(amount: amount, key: 1, specialKey: "")
-                    NumpadKeyView(amount: amount, key: 2, specialKey: "")
-                    NumpadKeyView(amount: amount, key: 3, specialKey: "")
+                    NumpadKeyView(amount: amount, key: 7, specialKey: "")
+                    NumpadKeyView(amount: amount, key: 8, specialKey: "")
+                    NumpadKeyView(amount: amount, key: 9, specialKey: "")
                 }
                 HStack {
                     NumpadKeyView(amount: amount, key: 4, specialKey: "")
@@ -28,9 +28,9 @@ struct NumpadView: View {
                     NumpadKeyView(amount: amount, key: 6, specialKey: "")
                 }
                 HStack {
-                    NumpadKeyView(amount: amount, key: 7, specialKey: "")
-                    NumpadKeyView(amount: amount, key: 8, specialKey: "")
-                    NumpadKeyView(amount: amount, key: 9, specialKey: "")
+                    NumpadKeyView(amount: amount, key: 1, specialKey: "")
+                    NumpadKeyView(amount: amount, key: 2, specialKey: "")
+                    NumpadKeyView(amount: amount, key: 3, specialKey: "")
                 }
                 HStack {
                     NumpadKeyView(amount: amount, key: 0, specialKey: "Backspace")

@@ -7,6 +7,7 @@
         <attribute name="order" optional="YES" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
         <relationship name="payees" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Payee" inverseName="account" inverseEntity="Payee"/>
         <relationship name="transactions" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Transaction" inverseName="account" inverseEntity="Transaction"/>
+        <relationship name="transfertransactions" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Transaction" inverseName="toaccount" inverseEntity="Transaction"/>
     </entity>
     <entity name="Budget" representedClassName="Budget" syncable="YES" codeGenerationType="class">
         <attribute name="amount" optional="YES" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
@@ -62,5 +63,6 @@
         <relationship name="category" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Category" inverseName="transactions" inverseEntity="Category"/>
         <relationship name="payee" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Payee" inverseName="transactions" inverseEntity="Payee"/>
         <relationship name="period" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Period" inverseName="transactions" inverseEntity="Period"/>
+        <relationship name="toaccount" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Account" inverseName="transfertransactions" inverseEntity="Account"/>
     </entity>
 </model>

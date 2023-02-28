@@ -16,11 +16,40 @@ struct ContentView: View {
         animation: .default)
     private var periods: FetchedResults<Period> // to be able to create periods if none exist yet (only on the first launch of the app
     
+    @FetchRequest(
+        sortDescriptors: [NSSortDescriptor(keyPath: \Transaction.id, ascending: true)],
+        animation: .default)
+    private var transactions: FetchedResults<Transaction> // to be able to calculate the balances in the PeriodBalances class - delete this if that didn't work
+    
+    class PeriodBalances: ObservableObject {
+        @Published var incomeBudget = 0.0 // total budget on all categories with type "Income"
+        @Published var incomeActual = 0.0 // total actual on all categories with type "Income"
+        @Published var expensesBudget = 0.0 // total budget on all categories with type "Expense"
+        @Published var expensesActual = 0.0 // total actual on all categories with type "Expense"
+        @Published var totalBalance = 0.0 // total balances of all accounts
+        @Published var showBalanceAnimation = false // determines whether the category balance change animation is shown the next time I open one of the views its defined in, or not
+        @Published var balanceAfter = false // determines which balance is being shown - the one before or the one after the transaction was created
+        @Published var category = Category() // category for which the animation will be shown
+        @Published var remainingBudgetBefore = 0.0 // remaining balance of that category before the latest change
+        
+        var budgetAvailable: Double {
+            return expensesBudget - expensesActual
+        }
+    }
+    @StateObject var periodBalances = PeriodBalances() // create the period balances - added to the environment further down
+    
+    class SelectedPeriod: ObservableObject {
+        @Published var period = Period()
+        @Published var periodStartDate = Date()
+        @Published var periodChangedManually = false // detects whether the user has changed period manually, so that the onAppear doesn't reset the period to today's period once it has been changed
+    }
+    @StateObject var selectedPeriod = SelectedPeriod() // the period selected - added to the environment further down
+    
     var body: some View {
         TabView {
             CategoryListView()
                 .tabItem {
-                    Label("Categories", systemImage: "dollarsign.circle.fill")
+                    Label("Budget", systemImage: "dollarsign.circle.fill")
                 }
             AccountListView()
                 .tabItem {
@@ -28,13 +57,18 @@ struct ContentView: View {
                 }
             
             TransactionListView(payee: nil, account: nil, category: nil)
-                .tabItem {
-                    Label("Transactions", systemImage: "list.triangle")
-                }
+            .tabItem {
+                Label("Transactions", systemImage: "list.triangle")
+            }
             
-            PayeeListView()
+//            PayeeListView()
+//                .tabItem {
+//                    Label("Payees", systemImage: "house")
+//                }
+            
+            DebtorListView()
                 .tabItem {
-                    Label("Payees", systemImage: "house")
+                    Label("Expenses", systemImage: "banknote")
                 }
             
             CSVExportView()
@@ -60,22 +94,13 @@ struct ContentView: View {
 //                    Label("Category groups", systemImage: "questionmark.folder.fill")
 //                }
         }
-        .onAppear {
-            createPeriods()
-        }
-        .preferredColorScheme(.dark) // force the app to start in dark mode, even if the device is configured to light mode
-    }
-    
-//    func clearAllTransactions() {
-//        print("Clearing all transactions")
-//        if(transactions.count > 0) {
-//            for i in 0 ... transactions.count - 1 {
-//                viewContext.delete(transactions[i])
-//            }
-//            PersistenceController.shared.save() // save the changes
+        .environmentObject(periodBalances) // put the balances in the environment, so that they are available in all views that declare them
+        .environmentObject(selectedPeriod) // put the selected period in the environment, so that they it is available in all views that declare it
+//        .onAppear {
+//            createPeriods()
 //        }
-//    }
-        
+        .preferredColorScheme(.dark) // force the app to start in dark mode, even if the device is configured to light mode
+    }   
     
     func createPeriods() {
         if(periods.count == 0) { // create periods if there are none
@@ -89,7 +114,7 @@ struct ContentView: View {
                 return formatter
             }()
             
-            for year in 2020...2030 {
+            for year in 2020...2025 {
                 components.year = year
                 for month in 1...12 {
                     components.month = month

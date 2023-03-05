@@ -26,9 +26,11 @@ struct CategoryView: View {
     
     @EnvironmentObject var periodBalances: ContentView.PeriodBalances // get the period balances from the environment
     
-    @State private var categoryBalance = 0.0
+//    @State private var categoryBalance = 0.0
     
     @StateObject var categoryBudget = AddTransactionView.Amount() // stores the budgeted amount, and the visibility of the numpad as seen from NumpadView / NumpadKeyView
+    
+    @State private var defaultCurrency = UserDefaults.standard.string(forKey: "DefaultCurrency") ?? "EUR"
         
     var body: some View {
         HStack {
@@ -37,46 +39,65 @@ struct CategoryView: View {
             
             Spacer()
             
-            Text(Double(categoryBudget.intAmount) / 100, format: .currency(code: "EUR")) // amount budgeted
+            Text(Double(categoryBudget.intAmount) / 100, format: .currency(code: defaultCurrency)) // amount budgeted
                 .onAppear {
-                    categoryBudget.intAmount = category.calcBudget(period: selectedPeriod.period)
+                    categoryBudget.intAmount = category.getBudget(period: selectedPeriod.period)
                 }
                 .onChange(of: selectedPeriod.period) { _ in
-                    categoryBudget.intAmount = category.calcBudget(period: selectedPeriod.period)
+                    categoryBudget.intAmount = category.getBudget(period: selectedPeriod.period) // recalculate the monthly budget balances when I switch periods
                 }
-                .onChange(of: categoryBudget.intAmount) { _ in
-                    saveBudget()
-                    // Calculate the period budgets - done in MiniReportingView and CategoryView:
-                    (periodBalances.incomeBudget, periodBalances.expensesBudget) = selectedPeriod.period.calcBudgets()
-//                    periodBalances.incomeBudget = monthlyBudgets().0
-//                    periodBalances.expensesBudget = monthlyBudgets().1
-                }
+//                .onChange(of: categoryBudget.intAmount) { _ in
+//                    saveBudget()
+//                    // Calculate the period budgets - done in MiniReportingView and CategoryView:
+//                    (periodBalances.incomeBudget, periodBalances.expensesBudget) = selectedPeriod.period.calcBudgets()
+//                }
                 .onTapGesture {
                     categoryBudget.showNumpad.toggle()
+                }
+                .onChange(of: categoryBudget.showNumpad) { _ in
+                    if categoryBudget.showNumpad == false { // save the category budget when I close the numpad
+                        saveBudget()
+                    }
                 }
                 .font(.caption)
                 .foregroundColor(.blue)
             
             Spacer()
             
-            Text(Double(categoryBalance) / 100, format: .currency(code: "EUR")) // amount spent
-                .onAppear {
-                    categoryBalance = category.calcBalance(period: selectedPeriod.period)
-                }
-                .onChange(of: periodBalances.expensesActual) { _ in
-                    categoryBalance = category.calcBalance(period: selectedPeriod.period)
-                }
-                .onChange(of: selectedPeriod.period) { _ in
-                    categoryBalance = category.calcBalance(period: selectedPeriod.period)
-                }
+            // NO NEED FOR THIS ANYMORE, THE BUDGET IS SAVED WHEN I CLOSE THE NUMPAD:
+//            if category.getBudget(period: selectedPeriod.period) != categoryBudget.intAmount { // if the category budget has been modified, show a button to save the new category budget
+//                Image(systemName: "checkmark")
+//                    .foregroundColor(.green)
+//                    .onTapGesture {
+//                        let impactMed = UIImpactFeedbackGenerator(style: .medium) // haptic feedback
+//                        impactMed.impactOccurred() // haptic feedback
+//                        categoryBudget.showNumpad = false // hide the numpad
+//                        saveBudget() // save the new budget
+//                        (periodBalances.incomeBudget, periodBalances.expensesBudget) = selectedPeriod.period.calcBudgets() // calculate the period budget balances and save them in the environment object
+//                    }
+//            }
+            
+            Text((category.getBalance(period: selectedPeriod.period)?.categorybalance ?? 0.0) / 100, format: .currency(code: defaultCurrency)) // amount spent
+//                .onAppear {
+////                    categoryBalance = category.calcBalance(period: selectedPeriod.period)
+//                    categoryBalance = category.getBalance(period: selectedPeriod.period)?.categorybalance ?? 0.0
+//                }
+//                .onChange(of: periodBalances.expensesActual) { _ in
+////                    categoryBalance = category.calcBalance(period: selectedPeriod.period)
+////                    categoryBalance = category.getBalance(period: selectedPeriod.period)?.categorybalance
+//                }
+//                .onChange(of: selectedPeriod.period) { _ in
+////                    categoryBalance = category.calcBalance(period: selectedPeriod.period)
+//                    categoryBalance = category.getBalance(period: selectedPeriod.period)?.categorybalance ?? 0.0
+//                }
                 .font(.caption)
             
             Spacer()
             
-            if(category.type == "Expense") { // only show the remaining budget for expense categories
-                Text((Double(categoryBudget.intAmount) + Double(categoryBalance)) / 100, format: .currency(code: "EUR")) // remaining budget
+            if(category.type == "Expense") { // show the remaining budget - but only for expense categories, not for income categories
+                Text((Double(categoryBudget.intAmount) + (category.getBalance(period: selectedPeriod.period)?.categorybalance ?? 00)) / 100, format: .currency(code: defaultCurrency)) // remaining budget
                     .font(.caption)
-                    .foregroundColor((Double(categoryBudget.intAmount) + Double(categoryBalance)) < 0 ? .red : .green)
+                    .foregroundColor((Double(categoryBudget.intAmount) + (category.getBalance(period: selectedPeriod.period)?.categorybalance ?? 00)) < 0 ? .red : .green)
             }
         }
         .sheet(isPresented: $categoryBudget.showNumpad) {
@@ -90,7 +111,8 @@ struct CategoryView: View {
     
     var budgetToSpent: some View {
         Button {
-            categoryBudget.intAmount = Int(-categoryBalance)
+            categoryBudget.intAmount = Int(-(category.getBalance(period: selectedPeriod.period)?.categorybalance ?? 00))
+            saveBudget()
         } label: {
             Label("Spent", systemImage: "equal")
         }
@@ -101,19 +123,16 @@ struct CategoryView: View {
         if(category.budgets?.count ?? 0 > 0) { // if there is already a budget for this category and period, update it
             for budget in category.budgets ?? [] {
                 if((budget as! Budget).period == selectedPeriod.period) {
-                    if (budget as! Budget).amount != Int64(categoryBudget.intAmount) {
-                        print("Budget already exists, and has changed. Updating it to \(Double(categoryBudget.intAmount) / 100)")
-                        (budget as! Budget).amount = Int64(categoryBudget.intAmount) // update the budget
-                        PersistenceController.shared.save() // save the changes
-                    }
-                    else {
-                        print("Budget already exists, but is unchanged")
-                    }
-                    return
+                    print("Budget already exists, and has changed. Updating it to \(Double(categoryBudget.intAmount) / 100)")
+                    (budget as! Budget).amount = Int64(categoryBudget.intAmount) // update the budget
+                    PersistenceController.shared.save() // save the changes
+                    
+                    (periodBalances.incomeBudget, periodBalances.expensesBudget) = selectedPeriod.period.calcBudgets() // calculate the period budget balances and save them in the environment object
+                    
+                    return // exit the function if the budget has been found
                 }
             }
         }
-        
         
         let newBudget = Budget(context: viewContext) // if I haven't returned yet, create a new budget
         newBudget.id = UUID()
@@ -122,6 +141,8 @@ struct CategoryView: View {
         newBudget.category = category
         
         PersistenceController.shared.save() // save the changes
+        
+        (periodBalances.incomeBudget, periodBalances.expensesBudget) = selectedPeriod.period.calcBudgets() // calculate the period budget balances and save them in the environment object
     }
 }
 

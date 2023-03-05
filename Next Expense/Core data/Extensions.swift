@@ -10,7 +10,6 @@ import Foundation
 extension Transaction {
     
     func populate(account: Account, date: Date, period: Period, payee: Payee?, category: Category?, memo: String, amount: Int, currency: String, income: Bool, transfer: Bool, toAccount: Account?, expense: Bool, debtor: Payee?, recurring: Bool, recurrence: String) {
-        //    func populate(date: Date, period: Period, recurring: Bool, recurrence: String, income: Bool, amount: Int, currency: String, payee: Payee?, category: Category?, account: Account, transfer: Bool, toAccount: Account?, expense: Bool, debtor: Payee?, memo: String) {
         if self.id == nil { // if this is a new transaction, create a UUID for it, and set its timestamp
             //            print("Creating a UUID for the transaction")
             self.id = UUID()
@@ -61,6 +60,62 @@ extension Transaction {
         self.recurrence = recurrence
     }
     
+    // Update the balances of the transaction's period, account, to account and category. If the balance doesn't exist do nothing
+    func updateBalances(transactionPeriod: Period, todayPeriod: Period, category: Category?, account: Account, toaccount: Account?) {
+        print("Trying to update balances based on new or modified transaction: category \(category?.name ?? ""), account \(account.name ?? "")")
+        
+        // Update the category balance for the transaction's period if the transaction has a category:
+        if category != nil {
+            let categorybalance = category?.getBalance(period: transactionPeriod)
+            if categorybalance != nil { // if the balance exists, recalculate it
+                categorybalance?.categorybalance = category?.calcBalance(period: transactionPeriod) ?? 0.0
+                categorybalance?.modifieddate = Date()
+            }
+            else { // if the balance doesn't exist yet, do nothing
+                print("Skipped updating balance based on new or modified transactions because the balance doesn't exist yet for category \(category?.name ?? "") in period \(transactionPeriod.monthString ?? ""). Doing nothing")
+            }
+        }
+        
+        // Update the account balance for end of day today if the transaction isn't in the future:
+        let accountbalance = account.getBalance(period: todayPeriod)
+        if accountbalance != nil { // if the balance exists, recalculate it
+            accountbalance?.accountbalance = account.calcBalance(toDate: Date())
+            accountbalance?.modifieddate = Date()
+        }
+        else { // if the balance doesn't exist yet, do nothing
+            print("Skipped updating balance based on new or modified transactions because the balance doesn't exist yet for account \(account.name ?? "") in period \(todayPeriod.monthString ?? ""). Doing nothing")
+        }
+        
+        // Update the "to account" balance for end of day today if there is one
+        if toaccount != nil { // if this is a transfer, do the same for the to account
+            let toaccountbalance = toaccount?.getBalance(period: todayPeriod)
+            if toaccountbalance != nil { // if the balance exists, recalculate it
+                toaccountbalance?.accountbalance = toaccount?.calcBalance(toDate: Date()) ?? 0.0
+                toaccountbalance?.modifieddate = Date()
+                
+            }
+            else { // if the balance doesn't exist yet, do nothing
+                print("Skipped updating balance based on new or modified transactions because the balance doesn't exist yet for account \(account.name ?? "") in period \(todayPeriod.monthString ?? ""). Doing nothing")
+            }
+        }
+        
+        // Update the income or expense total for the transaction's period
+        let periodBalance = transactionPeriod.getBalance()
+        if periodBalance != nil { // if the balance exists, recalculate it
+            if category?.type == "Income" {
+                periodBalance?.incomeactual = transactionPeriod.calcBalances().0
+            }
+            else if category?.type == "Expense" {
+                periodBalance?.expensesactual = transactionPeriod.calcBalances().1
+            }
+            periodBalance?.modifieddate = Date()
+        }
+        
+        else { // if the balance doesn't exist yet, do nothing
+            print("Skipped updating income or expense balance based on new or modified transactions because the balance doesn't exist yet for period \(transactionPeriod.monthString ?? ""). Doing nothing")
+        }
+        
+    }
     
     
     // Get the amount of the transaction converted into the default currency, positive if it is an inflow and negative if it is an outflow. If it is an expense transaction to a debtor, return 0. If it is a transfer between two accounts of the same type, return 0
@@ -104,67 +159,114 @@ extension Transaction {
     }
 }
 
+extension Balance {
+    
+    func populate(type: String, amount: Double, period: Period?, account: Account?, category: Category?) {
+        if self.id == nil { // if this is a new balance, create a UUID for it
+            self.id = UUID()
+        }
+        self.modifieddate = Date()
+        switch(type) {
+        case "accountbalance":
+            self.accountbalance = amount
+            self.account = account
+            self.period = period
+        case "categorybalance":
+            self.categorybalance = amount
+            self.category = category
+            self.period = period
+        case "expensesactual":
+            self.expensesactual = amount
+            self.period = period
+        case "incomeactual":
+            self.incomeactual = amount
+            self.period = period
+        default:
+            print("Failed to populate the balance - unknown type")
+        }
+    }
+}
+
 extension Account {
     
-    func calcBalance(toDate: Date) -> Int { // sum up all transactions on the account, based on both the Account and the ToAccount field
+    func getBalance(period: Period) -> Balance? {
+//        print("Getting balance for account \(self.name ?? "")")
+        for balance in period.balances ?? [] {
+            if (balance as! Balance).account == self {
+                return balance as? Balance
+            }
+        }
+        
+        return nil // if no balance is found
+    }
+    
+    func calcBalance(toDate: Date) -> Double { // sum up all transactions on the account, based on both the Account and the ToAccount field
+//        print("Calculating balance for account \(self.name ?? "")")
         var balance = 0.0
         for transaction in self.transactions ?? [] {
-            if((transaction as! Transaction).date ?? Date() <= toDate) { // if the transaction happened before the specified date
+            if(Calendar.current.startOfDay(for: (transaction as! Transaction).date ?? Date()) <= toDate) { // if the transaction happened on or before the specified date
                 balance += (transaction as! Transaction).income ? Double((transaction as! Transaction).amount) : -Double((transaction as! Transaction).amount) // add or substract the amount, depending on the direction of the transaction
             }
         }
         // Substract the transactions received to this account through transfers:
         for transaction in self.transfertransactions ?? [] {
-            if((transaction as! Transaction).date ?? Date() <= toDate) { // if the transaction happened before the specified date
+            if(Calendar.current.startOfDay(for: (transaction as! Transaction).date ?? Date()) <= toDate) { // if the transaction happened on or before the specified date
                 balance -= (transaction as! Transaction).income ? Double((transaction as! Transaction).amount) : -Double((transaction as! Transaction).amount) // add or substract the amount, depending on the direction of the transaction
             }
         }
-        return Int(balance)
+        print("New balance of account \(self.name ?? ""): \(round(balance) / 100)")
+        return balance
     }
 }
 
 extension Category {
     
-    func calcBalance(period: Period) -> Double { // needs to be a double, in case it is negative?
-        var amount = 0.0
-//        let defaultCurrency = UserDefaults.standard.string(forKey: "DefaultCurrency") ?? "EUR"
-        
-        for transaction in self.transactions ?? [] {
-            if((transaction as! Transaction).period == period) { // if the budget period is the selected period
-                amount += (transaction as! Transaction).getAmount()
-//                if !(transaction as! Transaction).expense { // if the transaction is not an expense transaction to a debtor
-//                    if (transaction as! Transaction).currency == defaultCurrency { // if the transaction is in the default currency
-//                        amount += (transaction as! Transaction).income ? Double((transaction as! Transaction).amount) : -Double((transaction as! Transaction).amount) // add or substract the amount depending on the direction of the transaction
-//                    }
-//                    else { // else if the transaction is in another currency
-//                        if let fxRate = period.getFxRate(currency1: defaultCurrency, currency2: (transaction as! Transaction).currency ?? "") {
-//                            amount += (transaction as! Transaction).income ? Double((transaction as! Transaction).amount) / fxRate * 100.0 : -Double((transaction as! Transaction).amount) / fxRate * 100.0 // add or substract the converted amount depending on the direction of the transaction
-//                        }
-//                    }
-//                }
+    func getBalance(period: Period) -> Balance? {
+//        print("Getting balance for category \(self.name ?? "")")
+        for balance in period.balances ?? [] {
+            if (balance as! Balance).category == self {
+                return balance as? Balance
             }
         }
-        return amount
+        
+        return nil // if no balance is found
+    }
+    
+    func calcBalance(period: Period) -> Double { // needs to be a double, in case it is negative
+//        print("Calculating balance of category \(self.name ?? "")")
+        var amount = 0.0
+        
+        for transaction in period.transactions ?? [] { // there will be less transactions in a period than in a category, so this should be faster than going through the category
+            if((transaction as! Transaction).category == self) { // if the transaction is in this category
+                amount += (transaction as! Transaction).getAmount()
+            }
+        }
+        
+//        for transaction in self.transactions ?? [] {
+//            if((transaction as! Transaction).period == period) { // if the budget period is the selected period
+//                amount += (transaction as! Transaction).getAmount()
+//            }
+//        }
+        print("New balance of category \(self.name ?? ""): \(round(amount) / 100)")
+        return round(amount) // rounded to the closest cent
     }
     
     
-    func calcBudget(period: Period) -> Int {
+    func getBudget(period: Period) -> Int {
         var amount = 0
-        for budget in self.budgets ?? [] {
+        for budget in period.budgets ?? [] {
 //            print("Budget start date for category \(self.name): \((budget as! Budget).date)")
 //            print("Start date: \(startDate)")
-            if((budget as! Budget).period == period) { // if the budget period is the selected period
+            if((budget as! Budget).category == self) { // if the budget category is this category
 //                print("Budget amount for \(self.name) is \((budget as! Budget).amount)")
-                if((budget as! Budget).category == self) { // if the category matches
-                    amount += Int((budget as! Budget).amount) // add the budget amount
-                }
+                amount += Int((budget as! Budget).amount) // add the budget amount
             }
         }
         return amount
     }
     
     func calcRemainingBudget(period: Period) -> Double {
-        return Double(calcBudget(period: period)) + calcBalance(period: period)
+        return Double(getBudget(period: period)) + calcBalance(period: period)
     }
     
 }
@@ -195,6 +297,18 @@ extension Period {
         return nil
     }
     
+    func getBalance() -> Balance? {
+//        print("Getting income and expense balance for period \(self.monthString ?? "")")
+        for balance in self.balances ?? [] {
+            if (balance as! Balance).category == nil && (balance as! Balance).account == nil {
+                return balance as? Balance
+            }
+        }
+        
+        return nil // if no balance is found
+        //        return self.value(forKeyPath: "balances.@sum.expensesactual") as! Double
+    }
+    
     func calcBalances() -> (Double, Double) {
         print("Calculating balances of period \(self.monthString ?? "")")
         var monthlyInc = 0.0 // sum of all incomes on income categories, minus sum of all expenses on income categories (in case that's a thing? Maybe for exchanging SEK to EUR for example, I would reduce my SEK income and increase my EUR income)
@@ -212,29 +326,6 @@ extension Period {
             else if((transaction as! Transaction).category?.type == "Expense") {  // if the category is an expense category, substract the amount from the monthly expenses
                 monthlyExp -= (transaction as! Transaction).getAmount()
             }
-            
-            
-            
-//                    if (transaction as! Transaction).currency == defaultCurrency { // if the transaction is in the default currency
-//                        if((transaction as! Transaction).category?.type == "Income") { // if the category is an income category, add or substract the amount to the monthly income
-//                            monthlyInc += (transaction as! Transaction).income ? Double((transaction as! Transaction).amount) : -Double((transaction as! Transaction).amount) // add or substract the amount depending on the direction of the transaction, using Double so that it can be divided by 100 when displaying it
-//                        }
-//                        else if((transaction as! Transaction).category?.type == "Expense") {  // if the category is an expense category, add or substract the amount to the monthly expenses
-//                            monthlyExp += (transaction as! Transaction).income ? -Double((transaction as! Transaction).amount) : Double((transaction as! Transaction).amount) // substract or add the amount depending on the direction of the transaction, using Double so that it can be divided by 100 when displaying it
-//                        }
-//                    }
-//                    else { // else if the transaction is in another currency
-//                        if let fxRate = self.getFxRate(currency1: defaultCurrency, currency2: (transaction as! Transaction).currency ?? "") {
-//                            if((transaction as! Transaction).category?.type == "Income") { // if the category is an income category, add or substract the converted amount to the monthly income
-//                                monthlyInc += (transaction as! Transaction).income ? Double((transaction as! Transaction).amount) / fxRate * 100.0 : -Double((transaction as! Transaction).amount) / fxRate * 100.0 // add or substract the amount depending on the direction of the transaction, using Double so that it can be divided by 100 when displaying it
-//                            }
-//                            else if((transaction as! Transaction).category?.type == "Expense") {  // if the category is an expense category, add or substract the converted amount to the monthly expenses
-//                                monthlyExp += (transaction as! Transaction).income ? -Double((transaction as! Transaction).amount) / fxRate * 100.0 : Double((transaction as! Transaction).amount) / fxRate * 100.0 // substract or add the amount depending on the direction of the transaction, using Double so that it can be divided by 100 when displaying it
-//                            }
-//                        }
-//                    }
-//                }
-//            }
         }
 
         return (monthlyInc, monthlyExp)

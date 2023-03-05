@@ -116,7 +116,7 @@ struct AddTransactionView: View {
                         
                         Text(Double(amount.intAmount) / 100, format: .currency(code: currency))
 //                            .foregroundColor(income ? .green : .primary)
-                            .foregroundColor(income || (selectedAccount?.type == "External" && selectedToAccount?.type == "Budget") ? .green : .primary) // green for an income, or for a transfer from an external account to a budget account
+                            .foregroundColor(income || (transfer && selectedAccount?.type == "External" && selectedToAccount?.type == "Budget") ? .green : .primary) // green for an income, or for a transfer from an external account to a budget account
                             .onTapGesture {
 //                                withAnimation {
                                 amount.showNumpad = true // display the custom numpad
@@ -267,32 +267,10 @@ struct AddTransactionView: View {
 //                            }
                         }
                         
-//                        Picker("Currency", selection: $currency) {
-//                            ForEach(currencies, id: \.self) {
-//                                Text($0)
-//                            }
-//                        }
-//                        .onAppear {
-//                            currency = selectedAccount?.currency ?? "EUR" // set the currency to the currency of the selected account
-//                        }
-                        
                         TextField("Memo", text: $memo)
                         createTransactionButton
                     }
-                    //                if(amount.isFocused) { // if the amount field has the focus, display the numpad
-                    //                    NumpadView(amount: amount)
-                    //                }
                 }
-                //            .toolbar {
-                //                ToolbarItemGroup(placement: .keyboard) {
-                //                    Spacer()
-                //                    createTransactionButton
-                //                    Spacer()
-                //                    Button("Done") {
-                //                        amount.isFocused = false
-                //                    }
-                //                }
-                //            }
                 
                 if(amount.showNumpad) {
                     NumpadView(amount: amount)
@@ -357,8 +335,9 @@ struct AddTransactionView: View {
                     selectedDebtor = payee
                 }
                 
-                // Before I create the transaction, save the current remaining budget so that it can be displayed after:
-                periodBalances.remainingBudgetBefore = selectedCategory?.calcRemainingBudget(period: selectedPeriod.period) ?? 0.0
+                // Before I create the transaction, save the current remaining budget for the transaction's period, so that it can be displayed after:
+//                periodBalances.remainingBudgetBefore = selectedCategory?.calcRemainingBudget(period: selectedPeriod.period) ?? 0.0
+                periodBalances.remainingBudgetBefore = selectedCategory?.calcRemainingBudget(period: getPeriod(date: date)) ?? 0.0
                 
                 // Create and populate the transaction:
                 let transaction = Transaction(context: viewContext)
@@ -368,15 +347,11 @@ struct AddTransactionView: View {
                     let nextRecurrenceDate = Calendar.current.date(byAdding: .month, value: 1, to: date) // increment the recurring transaction's date by one recurrence period
                     let period = getPeriod(date: nextRecurrenceDate ?? Date())
                     
-//                    transaction.populate(date: nextRecurrenceDate ?? Date(), period: period, recurring: recurring, recurrence: recurrence, income: income, amount: amount.intAmount, currency: currency, payee: selectedPayee, category: selectedCategory, account: selectedAccount ?? Account(), transfer: transfer, toAccount: selectedToAccount, expense: expense, debtor: selectedDebtor, memo: memo)
-                    
                     transaction.populate(account: selectedAccount ?? Account(), date: nextRecurrenceDate ?? Date(), period: period, payee: selectedPayee, category: selectedCategory, memo: memo, amount: amount.intAmount, currency: currency, income: income, transfer: transfer, toAccount: selectedToAccount, expense: expense, debtor: selectedDebtor, recurring: recurring, recurrence: recurrence)
                     
                     // Create a non-recurring transaction on the selected date:
                     let transaction2 = Transaction(context: viewContext)
                     let period2 = getPeriod(date: date)
-                    
-//                    transaction2.populate(date: date, period: period2, recurring: false, recurrence: "", income: income, amount: amount.intAmount, currency: currency, payee: selectedPayee, category: selectedCategory, account: selectedAccount ?? Account(), transfer: transfer, toAccount: selectedToAccount, expense: expense, debtor: selectedDebtor, memo: memo)
                     
                     transaction2.populate(account: selectedAccount ?? Account(), date: date, period: period2, payee: selectedPayee, category: selectedCategory, memo: memo, amount: amount.intAmount, currency: currency, income: income, transfer: transfer, toAccount: selectedToAccount, expense: expense, debtor: selectedDebtor, recurring: false, recurrence: "")
                 }
@@ -386,120 +361,24 @@ struct AddTransactionView: View {
                     let period = getPeriod(date: date)
                     
                     transaction.populate(account: selectedAccount ?? Account(), date: date, period: period, payee: selectedPayee, category: selectedCategory, memo: memo, amount: amount.intAmount, currency: currency, income: income, transfer: transfer, toAccount: selectedToAccount, expense: expense, debtor: selectedDebtor, recurring: recurring, recurrence: recurrence)
-                    
-//                    transaction.populate(date: date, period: period, recurring: recurring, recurrence: recurrence, income: income, amount: amount.intAmount, currency: currency, payee: selectedPayee, category: selectedCategory, account: selectedAccount ?? Account(), transfer: transfer, toAccount: selectedToAccount, expense: expense, debtor: selectedDebtor, memo: memo)
-                }
-                
-                
-                
-                
-                /*
-                transaction.id = UUID()
-                transaction.timestamp = Date()
-                if(recurring && date < Date()) {
-                    transaction.date = Calendar.current.date(byAdding: .month, value: 1, to: transaction.date ?? Date()) // increment the recurring transaction's date
-                    transaction.period = getPeriod(date: transaction.date ?? Date())
-                }
-                else {
-                    transaction.date = date
-                    transaction.period = getPeriod(date: date)
-                }
-                transaction.recurring = recurring
-                transaction.recurrence = recurrence
-                transaction.payee = selectedPayee
-                if(!transfer) { // so that I don't get any category on transfers
-                    transaction.category = selectedCategory
-                }
-                transaction.expense = expense
-                if expense {
-                    transaction.debtor = selectedDebtor
-                }
-                transaction.amount = Int64(amount.intAmount) // save amount as an int, i.e. 2560 means 25,60€ for example
-                transaction.income = income // save the direction of the transaction, true for an income, false for an expense
-                transaction.transfer = transfer // save the information of whether or not this is a transfer
-                transaction.currency = currency
-                transaction.memo = memo
-                transaction.account = selectedAccount
-                if(transfer) {
-                    transaction.toaccount = selectedToAccount
-                }
-                
-                if(recurring) { // if this is a recurring transaction
-                    if(date < Date()) { // if the recurring transaction has a date today or in the past
-                        
-                        // Create a non-recurring transaction on the selected date:
-                        let transaction2 = Transaction(context: viewContext)
-
-                        transaction2.id = UUID()
-                        transaction2.timestamp = Date()
-                        transaction2.date = date
-                        transaction2.period = getPeriod(date: date)
-                        transaction2.payee = selectedPayee
-                        if(!transfer) { // so that I don't get any category on transfers
-                            transaction2.category = selectedCategory
-                        }
-                        transaction2.expense = expense
-                        if expense {
-                            transaction2.debtor = selectedDebtor
-                        }
-                        transaction2.amount = Int64(amount.intAmount) // save amount as an int, i.e. 2560 means 25,60€ for example
-                        transaction2.income = income // save the direction of the transaction, true for an income, false for an expense
-                        transaction2.transfer = transfer // save the information of whether or not this is a transfer
-                        transaction2.currency = currency
-                        transaction2.memo = memo
-                        transaction2.account = selectedAccount
-                        if(transfer) {
-                            transaction2.toaccount = selectedToAccount
-                        }
-                    }
-                }
-                */
-                
-                PersistenceController.shared.save() // save the item
-                
-                // Calculate the period balances - done in MiniReportingView and AddTransactionView:
-                (periodBalances.incomeActual, periodBalances.expensesActual) = selectedPeriod.period.calcBalances()
-                
-                // Calculate the total balance - done in MiniReportingView and AddTransactionView:
-                periodBalances.totalBalance = 0.0
-                let defaultCurrency = UserDefaults.standard.string(forKey: "DefaultCurrency") ?? "EUR"
-                // Set the date to today if the current period is selected, or the end of the period if a past or future period is selected:
-                var consideredDate: Date
-                if selectedPeriod.period == getPeriod(date: Date()) {
-                    consideredDate = Date()
-                }
-                else {
-                    var components = DateComponents()
-                    components.year = Int(selectedPeriod.period.year)
-                    components.month = Int(selectedPeriod.period.month) + 1
-                    components.day = 1
-                    consideredDate = Calendar.current.startOfDay(for: Calendar.current.date(from: components) ?? Date())
-                }
-                
-                print("Calculating total balance as of \(consideredDate)")
-                for account in accounts {
-                    if account.type == "Budget" { // ignore external accounts
-                        if account.currency == defaultCurrency {
-                            periodBalances.totalBalance += Double(account.calcBalance(toDate: Date()))
-                        }
-                        else { // for accounts in a different currency, add the amount converted to the default currency using the selected period's exchange rate, if there is one, otherwise add 0
-                            if let fxRate = selectedPeriod.period.getFxRate(currency1: defaultCurrency, currency2: account.currency ?? "") {
-                                periodBalances.totalBalance += Double(account.calcBalance(toDate: consideredDate)) / fxRate * 100.0
-                            }
-                        }
-                    }
-                }
-                
-//                periodBalances.incomeActual = monthlyBalances().0
-//                periodBalances.expensesActual = monthlyBalances().1
-//                periodBalances.totalBalance = totalBalance(periodStartDate: selectedPeriod.periodStartDate)
-                
-                // Save the information required to show the category balance animation, except for income transactions, and for transfers between accounts of the same type:
-                if !income && !(transfer && selectedAccount?.type == selectedToAccount?.type) {
+                }                
+                // Save the information required to show the category balance animation, except for income categories, for transactions on an external account, and for transfers between accounts of the same type:
+                if !(selectedCategory?.type == "Income") && !(!transfer && selectedAccount?.type == "External") && !(transfer && selectedAccount?.type == selectedToAccount?.type) {
                     periodBalances.category = selectedCategory ?? Category()
                     periodBalances.showBalanceAnimation = true
                 }
                 
+                // Save the remaining budget of the transaction's category in the transation's period, so that it can be displayed after:
+                periodBalances.remainingBudgetAfter = selectedCategory?.calcRemainingBudget(period: getPeriod(date: date)) ?? 0.0
+                
+                // Update the category, account(s) and period balances based on the new transaction:
+                transaction.updateBalances(transactionPeriod: getPeriod(date: date), todayPeriod: getPeriod(date: Date()), category: selectedCategory, account: selectedAccount ?? Account(), toaccount: selectedToAccount)
+                
+                // Update the period balances in the environment object:
+                periodBalances.incomeActual = getPeriod(date: date).getBalance()?.incomeactual ?? 0.0
+                periodBalances.expensesActual = getPeriod(date: date).getBalance()?.expensesactual ?? 0.0
+                
+                PersistenceController.shared.save() // save the new transactions, and the balance updates
                 dismiss() // dismiss this view
             }
         }, label: {
@@ -519,7 +398,7 @@ struct AddTransactionView: View {
         }
     }
     
-    func getPeriod(date: Date) -> Period { // get the period corresponding to the chosen date. Exists in AccountDetailView, AddTransactionView, MiniReportingView, ReportingView, FxRateView, CSVExportView, DebtorView, ...?
+    private func getPeriod(date: Date) -> Period { // get the period corresponding to the chosen date. Exists in AccountDetailView, AddTransactionView, MiniReportingView, ReportingView, FxRateView, CSVExportView, DebtorView, ...?
         let year = Calendar.current.dateComponents([.year], from: date).year ?? 1900
         let month = Calendar.current.dateComponents([.month], from: date).month ?? 1
         

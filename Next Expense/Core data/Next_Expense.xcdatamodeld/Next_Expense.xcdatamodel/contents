@@ -6,9 +6,21 @@
         <attribute name="name" optional="YES" attributeType="String"/>
         <attribute name="order" optional="YES" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="type" optional="YES" attributeType="String"/>
+        <relationship name="balances" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Balance" inverseName="account" inverseEntity="Balance"/>
         <relationship name="payees" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Payee" inverseName="account" inverseEntity="Payee"/>
         <relationship name="transactions" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Transaction" inverseName="account" inverseEntity="Transaction"/>
         <relationship name="transfertransactions" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Transaction" inverseName="toaccount" inverseEntity="Transaction"/>
+    </entity>
+    <entity name="Balance" representedClassName="Balance" syncable="YES" codeGenerationType="class">
+        <attribute name="accountbalance" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="categorybalance" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="expensesactual" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="incomeactual" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="modifieddate" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <relationship name="account" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Account" inverseName="balances" inverseEntity="Account"/>
+        <relationship name="category" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Category" inverseName="balances" inverseEntity="Category"/>
+        <relationship name="period" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Period" inverseName="balances" inverseEntity="Period"/>
     </entity>
     <entity name="Budget" representedClassName="Budget" syncable="YES" codeGenerationType="class">
         <attribute name="amount" optional="YES" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
@@ -22,8 +34,9 @@
         <attribute name="name" optional="YES" attributeType="String"/>
         <attribute name="order" optional="YES" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="type" optional="YES" attributeType="String"/>
+        <relationship name="balances" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Balance" inverseName="category" inverseEntity="Balance"/>
         <relationship name="budgets" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Budget" inverseName="category" inverseEntity="Budget"/>
-        <relationship name="categorygroups" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="CategoryGroup" inverseName="categories" inverseEntity="CategoryGroup"/>
+        <relationship name="categorygroup" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="CategoryGroup" inverseName="categories" inverseEntity="CategoryGroup"/>
         <relationship name="payees" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Payee" inverseName="category" inverseEntity="Payee"/>
         <relationship name="transactions" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Transaction" inverseName="category" inverseEntity="Transaction"/>
     </entity>
@@ -31,7 +44,8 @@
         <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="name" optional="YES" attributeType="String"/>
         <attribute name="order" optional="YES" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
-        <relationship name="categories" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Category" inverseName="categorygroups" inverseEntity="Category"/>
+        <attribute name="showcategories" optional="YES" attributeType="Boolean" defaultValueString="YES" usesScalarValueType="YES"/>
+        <relationship name="categories" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Category" inverseName="categorygroup" inverseEntity="Category"/>
     </entity>
     <entity name="FxRate" representedClassName="FxRate" syncable="YES" codeGenerationType="class">
         <attribute name="currency1" optional="YES" attributeType="String"/>
@@ -53,8 +67,10 @@
         <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="month" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="monthString" optional="YES" attributeType="String"/>
+        <attribute name="showtransactions" optional="YES" attributeType="Boolean" defaultValueString="YES" usesScalarValueType="YES"/>
         <attribute name="startdate" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="year" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <relationship name="balances" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Balance" inverseName="period" inverseEntity="Balance"/>
         <relationship name="budgets" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Budget" inverseName="period" inverseEntity="Budget"/>
         <relationship name="fxrates" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="FxRate" inverseName="period" inverseEntity="FxRate"/>
         <relationship name="transactions" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Transaction" inverseName="period" inverseEntity="Transaction"/>

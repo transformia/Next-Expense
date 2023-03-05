@@ -26,7 +26,7 @@ struct TransactionListView: View {
     private var categories: FetchedResults<Category> // to be able to call AddTransactionView with a default category
     
     @FetchRequest(
-        sortDescriptors: [NSSortDescriptor(keyPath: \Period.startdate, ascending: true)],
+        sortDescriptors: [NSSortDescriptor(keyPath: \Period.startdate, ascending: false)],
         animation: .default)
     private var periods: FetchedResults<Period> // to be able to process recurring transactions
     
@@ -36,6 +36,10 @@ struct TransactionListView: View {
     
     @State private var showFutureTransactions = false // determines whether transactions dated in the future are displayed or not
     
+    @EnvironmentObject var selectedPeriod: ContentView.SelectedPeriod // get the selected period from the environment - for the category balance animation
+    
+    @EnvironmentObject var periodBalances: ContentView.PeriodBalances // get the period balances from the environment - to be able to show an animation when a category balance changes
+    
     // Filters with which to call this view:
     let payee: Payee?
     let account: Account?
@@ -43,184 +47,134 @@ struct TransactionListView: View {
     
     
     var body: some View {
-        NavigationView {
-            VStack {
-                
-                // Show button to create recurring transactions that are due:
-                if(countRecurringTransactions() > 0) {
-                    Button {
-                        processRecurringTransactions()
-                    } label: {
-                        Text("Process recurring: \(countRecurringTransactions())")
+        ZStack { // to be able to show an animation on top when a category balances changes
+            
+            NavigationView {
+                VStack {
+                    
+                    // Show button to create recurring transactions that are due:
+                    if(countRecurringTransactions() > 0) {
+                        Button {
+                            processRecurringTransactions()
+                        } label: {
+                            Text("Process recurring: \(countRecurringTransactions())")
+                        }
+                        .padding()
                     }
-                    .padding()
-                    //                Text("Process recurring: \(countRecurringTransactions())")
-                    //                    .frame(width: 500, height: 20)
-                    //                    .background(.blue)
-                    //                    .padding()
-                    //                    .onTapGesture {
-                    //                        processRecurringTransactions()
-                    //                    }
-                }
-                
-//                // Show button to delete the account if it has not transactions:
-//                if account != nil && transactions.filter({$0.account == account}).count == 0 {
-//                    Button(role: .destructive) {
-//                        print("Deleting account \(account?.name ?? "")")
-//                        let accountToDelete = account ?? Account()
-//                        viewContext.delete(accountToDelete)
-//                        PersistenceController.shared.save() // save the change
-//                        dismiss()
-//                    } label: {
-//                        Label("Delete account", systemImage: "trash")
-//                    }
-//                    .padding()
-//                }
-                
-                NavigationView {
-                    List {
-                        ForEach(transactions) { transaction in
-                            if(category == nil || transaction.category == category) { // if there is no filter, or the transaction matches the filter
-                                if(account == nil || transaction.account == account || transaction.toaccount == account) { // if there is no filter, or the transaction matches the filter
-                                    if(payee == nil || transaction.payee == payee) { // if there is no filter, or the transaction matches the filter
-                                        if showFutureTransactions || Calendar.current.startOfDay(for: transaction.date ?? Date()) <= Date() { // if I want to show future transactions, or if the start of the day of the transaction date is in the past
-                                            // Display the date if it is different from the previous transaction's date (if there is a previous transaction):
-                                            //                                    if {
-                                            //                                        Text(transaction.date ?? Date(), formatter: dateFormatter)
-                                            //                                    }
-                                            // Display the transaction:
-                                            NavigationLink {
-                                                TransactionDetailView(transaction: transaction)
-                                            } label : {
-                                                HStack {
-                                                    VStack {
-                                                        HStack {
-                                                            if(transaction.recurring) {
-                                                                Image(systemName: "arrow.counterclockwise")
+                    
+                    NavigationView {
+                        List {
+                            ForEach(periods) { period in
+                                if (
+                                    (showFutureTransactions && period.transactions?.filter({(category == nil || ($0 as! Transaction).category == category) && (account == nil || ($0 as! Transaction).account == account)}).count ?? 0 > 0) // if future transactions are shown, and there are transactions in the period, either with the selected account or category, or with no selection of account or category
+                                    || (period.transactions?.filter({Calendar.current.startOfDay(for: ($0 as! Transaction).date ?? Date()) <= Date() && (category == nil || ($0 as! Transaction).category == category) && (account == nil || ($0 as! Transaction).account == account)}).count ?? 0 > 0) // or if there are non-future transactions in the period, either with the selected account or category, or with no selection of account or category
+                                ) {
+                                    
+                                    PeriodTransactionsView(period: period)
+                                    
+                                    if period.showtransactions {
+                                        ForEach(transactions) { transaction in
+                                            if transaction.period == period { // if the transaction is in this period
+                                                if(category == nil || transaction.category == category) { // if there is no filter, or the transaction matches the filter
+                                                    if(account == nil || transaction.account == account || transaction.toaccount == account) { // if there is no filter, or the transaction matches the filter
+                                                        if(payee == nil || transaction.payee == payee) { // if there is no filter, or the transaction matches the filter
+                                                            if showFutureTransactions || Calendar.current.startOfDay(for: transaction.date ?? Date()) <= Date() { // if I want to show future transactions, or if the start of the day of the transaction date is in the past
+                                                                TransactionView(transaction: transaction, account: account)
                                                             }
-                                                            Text(transaction.date ?? Date(), formatter: dateFormatter)
-                                                                .font(.callout)
-                                                            if transaction.transfer {
-                                                                Text("Transfer")
-                                                                    .font(.callout)
-                                                            }
-                                                            else {
-                                                                Text(transaction.payee?.name ?? "")
-                                                                    .font(.callout)
-                                                            }
-                                                            Spacer()
-                                                            //                                                    Text(transaction.category?.name ?? "")
-                                                            //                                                        .font(.caption)
-                                                            //                                                        .foregroundColor(Calendar.current.startOfDay(for: transaction.date ?? Date()) > Date() ? .gray : .blue)
-                                                            //                                                    Spacer()
                                                         }
-                                                        
-                                                        HStack {
-                                                            if transaction.transfer {
-                                                                Text("\(transaction.account?.name ?? "") to \(transaction.toaccount?.name ?? "")")
-                                                                    .font(.caption)
-                                                                    .foregroundColor(.gray)
-                                                            }
-                                                            else {
-                                                                Text(transaction.account?.name ?? "")
-                                                                    .font(.caption)
-                                                                    .foregroundColor(.gray)
-                                                            }
-                                                            Spacer() // align it to the left
-                                                        }
-                                                        
-                                                        HStack {
-                                                            Text(transaction.category?.name ?? "")
-                                                                .font(.caption)
-                                                                .foregroundColor(Calendar.current.startOfDay(for: transaction.date ?? Date()) > Date() ? .gray : .blue)
-                                                            Spacer() // align it to the left
-                                                        }
-                                                        
-                                                        HStack {
-                                                            Text(transaction.memo ?? "")
-                                                                .font(.caption)
-                                                                .foregroundColor(.gray)
-                                                            Spacer() // align it to the left
-                                                        }
-                                                    }
-                                                    VStack(alignment: .trailing) {
-                                                        //                                                Spacer()
-                                                        //                                                Spacer()
-                                                        if(account == nil || transaction.account == account) { // from the transaction view (account == nil), or from the account sending a transfer
-                                                            Text(Double(transaction.amount) / 100, format: .currency(code: transaction.currency ?? "EUR"))
-                                                                .font(.callout)
-                                                                .foregroundColor(transaction.income || (account == nil && transaction.account?.type == "External" && transaction.toaccount?.type == "Budget") ? .green : .primary) // color the amount in green if it is an income, or if I am viewing a transfer from an external account to a budget account, and am viewing it from the transaction list (i.e. account = nil)
-                                                        }
-                                                        else if (transaction.transfer && transaction.toaccount == account) { // from the account receiving a transfer
-                                                            Text(Double(transaction.amount) / 100, format: .currency(code: transaction.currency ?? "EUR"))
-                                                                .font(.callout)
-                                                                .foregroundColor(.green)
-                                                            //                                                    .foregroundColor(!transaction.income || (transaction.account?.type == "External" && transaction.toaccount?.type == "Budget") ? .green : .primary) // reversed for the account that receives the transfer
-                                                        }
-                                                        
-                                                        //                                                Spacer()
-                                                        //
-                                                        //                                                Text(transaction.category?.name ?? "")
-                                                        //                                                    .font(.caption)
-                                                        //                                                    .foregroundColor(Calendar.current.startOfDay(for: transaction.date ?? Date()) > Date() ? .gray : .blue)
-                                                        
                                                     }
                                                 }
-                                                .foregroundColor(Calendar.current.startOfDay(for: transaction.date ?? Date()) > Date() ? .gray : nil)
                                             }
                                         }
                                     }
                                 }
                             }
+                            
+//                            ForEach(transactions) { transaction in
+//                                if(category == nil || transaction.category == category) { // if there is no filter, or the transaction matches the filter
+//                                    if(account == nil || transaction.account == account || transaction.toaccount == account) { // if there is no filter, or the transaction matches the filter
+//                                        if(payee == nil || transaction.payee == payee) { // if there is no filter, or the transaction matches the filter
+//                                            if showFutureTransactions || Calendar.current.startOfDay(for: transaction.date ?? Date()) <= Date() { // if I want to show future transactions, or if the start of the day of the transaction date is in the past
+//                                                TransactionView(transaction: transaction, account: account)
+//                                            }
+//                                        }
+//                                    }
+//                                }
+//                            }
+                        }
+                        .padding(EdgeInsets(top: 0, leading: -10, bottom: 0, trailing: -10)) // reduce side padding of the list items
+                        .sheet(isPresented: $addTransactionView) {
+                            AddTransactionView(payee: nil, account: account ?? accounts[0], category: category ?? categories[0])
                         }
                     }
-                    .padding(EdgeInsets(top: 0, leading: -10, bottom: 0, trailing: -10)) // reduce side padding of the list items
-                    .sheet(isPresented: $addTransactionView) {
-                        AddTransactionView(payee: nil, account: account ?? accounts[0], category: category ?? categories[0])
+                    
+                    Button {
+                        if(categories.count > 0 && accounts.count > 0) {
+                            addTransactionView.toggle() // show the view where I can add a new element
+                        }
+                        else {
+                            print("You need to create at least one account and one category before you can create a transaction")
+                        }
+                    } label: {
+                        Image(systemName: "plus")
+                            .resizable()
+                            .frame(width: 18, height: 18)
+                            .foregroundColor(.white)
+                            .padding(6)
+                            .background(.green)
+                            .clipShape(Circle())
                     }
+                    .padding(.bottom, 20.0)
                 }
-                
-                //            Button(role: .destructive) {
-                //                clearAllTransactions()
-                //            } label : {
-                //                Label("Clear all transactions", systemImage: "xmark.circle")
-                //                    .foregroundColor(.red)
-                //            }
-                
-                Button {
-                    if(categories.count > 0 && accounts.count > 0) {
-                        addTransactionView.toggle() // show the view where I can add a new element
+                .navigationTitle("Transactions")
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbar {
+                    ToolbarItem(placement: .navigationBarTrailing) {
+                        showFutureTransactionsButton
                     }
-                    else {
-                        print("You need to create at least one account and one category before you can create a transaction")
-                    }
-                } label: {
-                    Image(systemName: "plus")
-                        .resizable()
-                        .frame(width: 18, height: 18)
-                        .foregroundColor(.white)
-                        .padding(6)
-                        .background(.green)
-                        .clipShape(Circle())
-                }
-                .padding(.bottom, 20.0)
-            }
-            .navigationTitle("Transactions")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    showFutureTransactionsButton
                 }
             }
-        }
+            
+            if account == nil && category == nil { // if this view wasn't called from an account or a category, i.e. if I'm looking at the full transaction view:
+                if(periodBalances.showBalanceAnimation) { // show the update of the category balance for x seconds
+                    if !periodBalances.balanceAfter { // showing the balance before the transaction
+                        HStack {
+                            Text(periodBalances.category.name ?? "")
+                            Text(periodBalances.remainingBudgetBefore / 100, format: .currency(code: "EUR"))
+                        }
+                        .padding()
+                        .foregroundColor(periodBalances.remainingBudgetBefore > 0 ? .black : .white)
+                        .bold()
+                        .background(periodBalances.remainingBudgetBefore > 0 ? .green : .red)
+                        .clipShape(Capsule())
+                        .onAppear {
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 1.50) { // make it change after x seconds
+                                periodBalances.balanceAfter = true
+                            }
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 3.00) { // make it disappear after x seconds
+                                periodBalances.showBalanceAnimation = false
+                                periodBalances.balanceAfter = false
+                            }
+                        }
+                    }
+                    
+                    else { // showing the balance after the transaction
+                        HStack {
+                            Text(periodBalances.category.name ?? "")
+    //                        Text(periodBalances.category.calcRemainingBudget(period: selectedPeriod.period) / 100, format: .currency(code: "EUR"))
+                            Text(periodBalances.remainingBudgetAfter / 100, format: .currency(code: "EUR"))
+                        }
+                        .padding()
+                        .foregroundColor(periodBalances.remainingBudgetAfter > 0 ? .black : .white)
+                        .bold()
+                        .background(periodBalances.remainingBudgetAfter > 0 ? .green : .red)
+                        .clipShape(Capsule())
+                    }
+                }
+            }
+            
+        }  // end of ZStack
     }
-    
-    private let dateFormatter: DateFormatter = {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "MMM d"
-//        formatter.dateStyle = .medium
-        return formatter
-    }()
     
     private func processRecurringTransactions() {
         for transaction in transactions {
@@ -259,7 +213,9 @@ struct TransactionListView: View {
         Button {
             switch(showFutureTransactions) { // toggle between the 2 options
             case false:
-                showFutureTransactions = true
+                withAnimation {
+                    showFutureTransactions = true
+                }
 //                withAnimation {
 //                    showDeferredHelpText1 = true
 //                }
@@ -267,7 +223,9 @@ struct TransactionListView: View {
 //                        showDeferredHelpText1 = false
 //                }
             case true:
-                showFutureTransactions = false
+                withAnimation {
+                    showFutureTransactions = false
+                }
 //                withAnimation {
 //                    showDeferredHelpText2 = true
 //                }

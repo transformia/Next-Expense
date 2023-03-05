@@ -20,6 +20,12 @@ struct CategoryDetailView: View {
         animation: .default)
     private var accounts: FetchedResults<Account> // to be able to call AddTransactionView with a default account
     
+    @FetchRequest(
+        sortDescriptors: [NSSortDescriptor(keyPath: \CategoryGroup.order, ascending: true)],
+        animation: .default)
+    private var categoryGroups: FetchedResults<CategoryGroup> // so that I can select a group on the category
+    
+    
     @State private var addTransactionView = false // determines whether the view for adding elements is displayed or not
     
     @State private var showingDeleteAlert = false
@@ -30,6 +36,7 @@ struct CategoryDetailView: View {
     
     @State private var name = ""
     @State private var type = "Expense" // tells us the type of the category
+    @State private var categoryGroup: CategoryGroup?
     
     // Define category types:
     let types = ["Income", "Expense", "Investment"]
@@ -56,18 +63,34 @@ struct CategoryDetailView: View {
                         }
                 }
             }
-                
-            Picker("Category type", selection: $type) {
-                ForEach(types, id: \.self) {
-                    Text($0)
+            
+            HStack {
+                Picker("Category type", selection: $type) {
+                    ForEach(types, id: \.self) {
+                        Text($0)
+                    }
                 }
-            }
-            .onAppear {
-                type = category.type ?? ""
-            }
-            .onChange(of: type) { _ in
-                category.type = type
-                PersistenceController.shared.save()
+                .onAppear {
+                    type = category.type ?? ""
+                }
+                .onChange(of: type) { _ in
+                    category.type = type
+                    PersistenceController.shared.save()
+                }
+                
+                Picker("Category group", selection: $categoryGroup) {
+                    ForEach(categoryGroups, id: \.self) { (categoryGroup: CategoryGroup) in
+                        Text(categoryGroup.name ?? "")
+                            .tag(categoryGroup as CategoryGroup?)
+                    }
+                }
+                .onAppear {
+                    categoryGroup = category.categorygroup
+                }
+                .onChange(of: categoryGroup) { _ in
+                    category.categorygroup = categoryGroup
+                    PersistenceController.shared.save()
+                }
             }
 //                HStack {
 //                    saveButton

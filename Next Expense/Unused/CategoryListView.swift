@@ -73,7 +73,7 @@ struct CategoryListView: View {
                         }
                         .onAppear {
                             if(!selectedPeriod.periodChangedManually) { // if the user hasn't modified the period manually yet
-                                period = getTodaysPeriod() // set the period selected in the picker to today's period
+                                period = getPeriod(date: Date()) // set the period selected in the picker to today's period
                             }
                             selectedPeriod.period = period // set the period value visible from other view to the value chosen in the picker
                             selectedPeriod.periodStartDate = period.startdate ?? Date()
@@ -81,7 +81,45 @@ struct CategoryListView: View {
                         .onChange(of: period) { _ in
                             selectedPeriod.period = period // set the period value visible from other view to the value chosen in the picker
                             selectedPeriod.periodStartDate = period.startdate ?? Date()
-                            selectedPeriod.periodChangedManually = true // make sure that the period doesnt reset to today's period automatically anymore
+                            selectedPeriod.periodChangedManually = true // make sure that the period doesn't reset to today's period automatically anymore
+                            
+                            // Create the balances that haven't been created yet for this period:
+                            
+                            // Category balances:
+                            for category in categories {
+                                if category.getBalance(period: selectedPeriod.period) == nil {
+                                    let categorybalance = Balance(context: viewContext)
+                                    categorybalance.populate(type: "categorybalance", amount: category.calcBalance(period: selectedPeriod.period) , period: selectedPeriod.period, account: nil, category: category)
+                                }
+                            }
+                            
+                            // Account balances:
+                            var consideredDate: Date
+                            if selectedPeriod.period == getPeriod(date: Date()) {
+                                consideredDate = Date()
+                            }
+                            else {
+                                var components = DateComponents()
+                                components.year = Int(selectedPeriod.period.year)
+                                components.month = Int(selectedPeriod.period.month) + 1
+                                components.day = 1
+                                consideredDate = Calendar.current.startOfDay(for: Calendar.current.date(from: components) ?? Date())
+                            }
+                            
+                            for account in accounts {
+                                if account.getBalance(period: selectedPeriod.period) == nil {
+                                    let accountbalance = Balance(context: viewContext)
+                                    accountbalance.populate(type: "accountbalance", amount: account.calcBalance(toDate: consideredDate), period: selectedPeriod.period, account: account, category: nil)
+                                }
+                            }
+                            // Period balance:
+                            let incomeexpensesactual = selectedPeriod.period.getBalance()
+                            if incomeexpensesactual == nil {
+                                let incomeexpensesactual = Balance(context: viewContext)
+                                let (incomeactual, expensesactual) = selectedPeriod.period.calcBalances()
+                                incomeexpensesactual.populate(type: "incomeactual", amount: incomeactual, period: selectedPeriod.period, account: nil, category: nil)
+                                incomeexpensesactual.populate(type: "expensesactual", amount: expensesactual, period: selectedPeriod.period, account: nil, category: nil)
+                            }
                         }
                         
                         nextPeriod
@@ -228,9 +266,9 @@ struct CategoryListView: View {
         } // end of ZStack
     }
     
-    private func getTodaysPeriod() -> Period { // get the period corresponding to today's date
-        let year = Calendar.current.dateComponents([.year], from: Date()).year ?? 1900
-        let month = Calendar.current.dateComponents([.month], from: Date()).month ?? 1
+    func getPeriod(date: Date) -> Period { // get the period corresponding to the chosen date. Exists in AccountDetailView, AddTransactionView, MiniReportingView, ReportingView, FxRateView, CSVExportView, DebtorView, CategoryListView...?
+        let year = Calendar.current.dateComponents([.year], from: date).year ?? 1900
+        let month = Calendar.current.dateComponents([.month], from: date).month ?? 1
         
         for period in periods {
             if(period.year == year) {
@@ -239,7 +277,7 @@ struct CategoryListView: View {
                 }
             }
         }
-        return Period() // if no period is found, return a new one (because I need to return something in all cases)
+        return Period() // if no period is found, return a new one
     }
     
     var previousPeriod: some View {

@@ -15,36 +15,58 @@ struct CategoryGroupDetailView: View {
         animation: .default)
     private var categories: FetchedResults<Category>
     
+    @Environment(\.dismiss) private var dismiss // used for dismissing this view
+        
     let categoryGroup: CategoryGroup
     
     @State private var name = ""
     
     @State private var addCategoryToGroupView = false // determines whether that view is displayed or not
     
-    @Environment(\.dismiss) private var dismiss // used for dismissing this view
+    @FocusState var isFocused: Bool // determines whether the focus is on the text field or not
     
     var body: some View {
         VStack {
-            TextField("Category group", text: $name)
-                .onAppear {
-                    name = categoryGroup.name ?? ""
+            HStack {
+                TextField("Category group", text: $name)
+                    .font(.title)
+                    .focused($isFocused)
+                    .multilineTextAlignment(.center)
+                    .onAppear {
+                        name = categoryGroup.name ?? ""
+                    }
+                if name != categoryGroup.name { // if I have modified the name, show a button to save the change
+                    Image(systemName: "opticaldiscdrive")
+                        .foregroundColor(.blue)
+                        .onTapGesture {
+                            categoryGroup.name = name
+                            PersistenceController.shared.save()
+                            isFocused = false
+                        }
                 }
+            }
+            
             List {
                 ForEach(categories) { category in
-                    if(category.categorygroups?.count ?? 0 >= 1) { // if this category has at least 1 category group
-                        if(category.categorygroups?.contains(categoryGroup) != false) { // if this category is part of this category group
-                            Text(category.name ?? "")
-                        }
+                    if category.categorygroup == categoryGroup {
+                        Text(category.name ?? "")
+                            .swipeActions(edge: .trailing) {
+                                Button {
+                                    withAnimation {
+                                        category.categorygroup = nil
+                                    }
+                                    PersistenceController.shared.save() // save the changes
+                                } label: {
+                                    Label("Delete", systemImage: "trash")
+                                }
+                                .tint(.red)
+                            }
                     }
                 }
             }
             
-            HStack {
-                saveButton
-                deleteButton
-            }
-            .padding()
-            .buttonStyle(BorderlessButtonStyle()) // to avoid that buttons inside the same HStack activate together
+            deleteButton
+            
         }
         .sheet(isPresented: $addCategoryToGroupView) {
             AddCategoryToGroupView(categoryGroup: categoryGroup)
@@ -60,17 +82,6 @@ struct CategoryGroupDetailView: View {
                     Image(systemName: "plus")
                 }
             }
-        }
-    }
-    
-    var saveButton: some View {
-        Button {
-            categoryGroup.name = name
-                
-            PersistenceController.shared.save() // save the change
-            dismiss()
-        } label : {
-            Label("Save", systemImage: "opticaldiscdrive.fill")
         }
     }
     

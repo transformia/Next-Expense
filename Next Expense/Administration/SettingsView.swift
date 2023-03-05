@@ -10,6 +10,7 @@ import SwiftUI
 struct SettingsView: View {
     
     @State private var defaultCurrency = ""
+    @State private var showCSVExportView = false
     
     // Define available currencies:
     let currencies = ["EUR", "SEK"]
@@ -27,6 +28,14 @@ struct SettingsView: View {
             .onChange(of: defaultCurrency) { _ in
                 UserDefaults.standard.set(defaultCurrency, forKey: "DefaultCurrency")
             }
+            
+            Text("Import or export data")
+                .onTapGesture {
+                    showCSVExportView.toggle()
+                }
+        }
+        .sheet(isPresented: $showCSVExportView) {
+            CSVExportView()
         }
     }
 }

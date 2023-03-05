@@ -13,34 +13,118 @@ struct AdminView: View {
     @FetchRequest(
         sortDescriptors: [NSSortDescriptor(keyPath: \Transaction.date, ascending: false), NSSortDescriptor(keyPath: \Transaction.timestamp, ascending: false)],
         animation: .default)
-    private var transactions: FetchedResults<Transaction> // to be able to work with transactions
+    private var transactions: FetchedResults<Transaction>
+    
+    @FetchRequest(
+        sortDescriptors: [NSSortDescriptor(keyPath: \Period.startdate, ascending: true)],
+        animation: .default)
+    private var periods: FetchedResults<Period>
+    
+    @FetchRequest(
+        sortDescriptors: [NSSortDescriptor(keyPath: \Category.order, ascending: true)],
+        animation: .default)
+    private var categories: FetchedResults<Category>
+    
+    @FetchRequest(
+        sortDescriptors: [NSSortDescriptor(keyPath: \CategoryGroup.id, ascending: true)],
+        animation: .default)
+    private var categoryGroups: FetchedResults<CategoryGroup>
     
     @State private var transactionCount = 0
     
+    @State private var showingClearTransactionsAlert = false
+    @State private var showingClearPeriodsAlert = false
+    @State private var showingClearCategoriesAlert = false
+    
     var body: some View {
         VStack {
-            HStack {
-                Text("Transactions with amount 0:")
-                Text("\(transactionCount)")
-                    .onAppear {
-                        transactionCount = countTransactions()
-                    }
-            }
             
             Button {
-                clearTransactions()
+                showingClearPeriodsAlert = true
+            } label: {
+                Label("Delete all periods", systemImage: "xmark.circle.fill")
+            }
+            .alert(isPresented:$showingClearPeriodsAlert) {
+                Alert(
+                    title: Text("Are you sure you want to delete all periods?"),
+                    message: Text("This cannot be undone"),
+                    primaryButton: .destructive(Text("Delete")) {
+                        clearPeriods()
+                    },
+                    secondaryButton: .cancel()
+                )
+            }
+            .padding()
+            
+            Button {
+                showingClearCategoriesAlert = true
+            } label: {
+                Label("Delete all categories and groups", systemImage: "xmark.circle.fill")
+            }
+            .alert(isPresented:$showingClearCategoriesAlert) {
+                Alert(
+                    title: Text("Are you sure you want to delete all categories and groups?"),
+                    message: Text("This cannot be undone"),
+                    primaryButton: .destructive(Text("Delete")) {
+                        clearCategories()
+                    },
+                    secondaryButton: .cancel()
+                )
+            }
+            .padding()
+            
+            
+//            HStack {
+//                Text("Transactions with amount 0:")
+//                Text("\(transactionCount)")
+//                    .onAppear {
+//                        transactionCount = countTransactions()
+//                    }
+//            }
+//
+//            Button {
+//                clearTransactions()
+//
+//            } label: {
+//                Label("Clear transactions", systemImage: "xmark.circle.fill")
+//            }
+            
+            Button {
+                showingClearTransactionsAlert = true
                 
             } label: {
-                Label("Clear transactions", systemImage: "xmark.circle.fill")
+                Label("Clear ALL transactions", systemImage: "xmark.circle.fill")
             }
-            
-//            Button {
-//                clearAllTransactions()
-//                
-//            } label: {
-//                Label("Clear ALL transactions", systemImage: "xmark.circle.fill")
-//            }
+            .alert(isPresented:$showingClearTransactionsAlert) {
+                Alert(
+                    title: Text("Are you sure you want to delete all transactions?"),
+                    message: Text("This cannot be undone"),
+                    primaryButton: .destructive(Text("Delete")) {
+                        clearAllTransactions()
+                    },
+                    secondaryButton: .cancel()
+                )
+            }
+            .padding()
         }
+    }
+    
+    
+    private func clearPeriods() {
+        for period in periods {
+            viewContext.delete(period)
+        }
+        PersistenceController.shared.save() // save the changes
+    }
+    
+    private func clearCategories() {
+        for category in categories {
+            viewContext.delete(category)
+        }
+        for categoryGroup in categoryGroups {
+            viewContext.delete(categoryGroup)
+        }
+        PersistenceController.shared.save() // save the changes
     }
     
     private func countTransactions() -> Int {

@@ -26,25 +26,35 @@ struct AddCategoryToGroupView: View {
             Form {
                 Picker("Category", selection: $selectedCategory) {
                     ForEach(categories, id: \.self) { (category: Category) in
-                        Text(category.name ?? "")
-                            .tag(category as Category?)
+                        if category.categorygroup == nil {
+                            Text(category.name ?? "")
+                                .tag(category as Category?)
+                                .onAppear { // if there are unassigned categories left, select the first one when opening the form
+                                    if categories.filter({$0.categorygroup == nil}).count > 0 {
+                                        selectedCategory = categories.filter({$0.categorygroup == nil})[0]
+                                    }
+                                }
+                        }
                     }
                 }
-                saveButton
+                if selectedCategory != nil {
+                    saveButton
+                }
             }
         }
     }
     
     var saveButton: some View {
         Button(action: {
-            selectedCategory?.addToCategorygroups(categoryGroup)
+            selectedCategory?.categorygroup = categoryGroup
             
             PersistenceController.shared.save() // save the item
             
             dismiss() // dismiss this view
         }, label: {
-            Label("Save", systemImage: "opticaldiscdrive.fill")
+            Label("Add", systemImage: "plus")
         })
+        .tint(.green)
     }
 }
 

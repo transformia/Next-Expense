@@ -26,11 +26,14 @@ struct ContentView: View {
         @Published var incomeActual = 0.0 // total actual on all categories with type "Income"
         @Published var expensesBudget = 0.0 // total budget on all categories with type "Expense"
         @Published var expensesActual = 0.0 // total actual on all categories with type "Expense"
+        @Published var totalBalanceBudget = 0.0 // total balances of all budget accounts
+        @Published var totalBalanceExternal = 0.0 // total balances of all external accounts
         @Published var totalBalance = 0.0 // total balances of all accounts
         @Published var showBalanceAnimation = false // determines whether the category balance change animation is shown the next time I open one of the views its defined in, or not
         @Published var balanceAfter = false // determines which balance is being shown - the one before or the one after the transaction was created
         @Published var category = Category() // category for which the animation will be shown
         @Published var remainingBudgetBefore = 0.0 // remaining balance of that category before the latest change
+        @Published var remainingBudgetAfter = 0.0 // remaining balance of that category after the latest change
         
         var budgetAvailable: Double {
             return expensesBudget - expensesActual
@@ -46,63 +49,79 @@ struct ContentView: View {
     @StateObject var selectedPeriod = SelectedPeriod() // the period selected - added to the environment further down
     
     var body: some View {
-        TabView {
-            CategoryListView()
-                .tabItem {
-                    Label("Budget", systemImage: "dollarsign.circle.fill")
-                }
-            AccountListView()
-                .tabItem {
-                    Label("Accounts", systemImage: "banknote")
-                }
+        
+        if periods.count > 0 {  // to protect against crashes when opening BudgetView when there are no periods yet
             
-            TransactionListView(payee: nil, account: nil, category: nil)
-            .tabItem {
-                Label("Transactions", systemImage: "list.triangle")
+            TabView {
+                
+                BudgetView()
+                    .tabItem {
+                        Label("Budget", systemImage: "dollarsign.circle.fill")
+                    }
+                
+                //            BalanceListView()
+                //                .tabItem {
+                //                    Label("Balances", systemImage: "dollarsign.circle.fill")
+                //                }
+                
+                AccountListView()
+                    .tabItem {
+                        Label("Accounts", systemImage: "banknote")
+                    }
+                
+                TransactionListView(payee: nil, account: nil, category: nil)
+                    .tabItem {
+                        Label("Transactions", systemImage: "list.triangle")
+                    }
+                
+                PayeeListView()
+                    .tabItem {
+                        Label("Payees", systemImage: "house")
+                    }
+                
+                DebtorListView()
+                    .tabItem {
+                        Label("Expenses", systemImage: "banknote")
+                    }
+                
+                //            PeriodListView()
+                //                .tabItem {
+                //                    Label("Periods", systemImage: "questionmark.folder.fill")
+                //                }
+                //            BudgetListView()
+                //                .tabItem {
+                //                    Label("Budgets", systemImage: "questionmark.folder.fill")
+                //                }
+                //            CategoryGroupListView()
+                //                .tabItem {
+                //                    Label("Category groups", systemImage: "questionmark.folder.fill")
+                //                }
             }
-            
-//            PayeeListView()
-//                .tabItem {
-//                    Label("Payees", systemImage: "house")
-//                }
-            
-            DebtorListView()
-                .tabItem {
-                    Label("Expenses", systemImage: "banknote")
-                }
-            
-            CSVExportView()
-                .tabItem {
-                    Label("Export", systemImage: "list.triangle")
-                }
-            
-//            AdminView()
-//                .tabItem {
-//                    Label("Admin", systemImage: "key")
-//                }
-            
-//            PeriodListView()
-//                .tabItem {
-//                    Label("Periods", systemImage: "questionmark.folder.fill")
-//                }
-//            BudgetListView()
-//                .tabItem {
-//                    Label("Budgets", systemImage: "questionmark.folder.fill")
-//                }
-//            CategoryGroupListView()
-//                .tabItem {
-//                    Label("Category groups", systemImage: "questionmark.folder.fill")
-//                }
+            .environmentObject(periodBalances) // put the balances in the environment, so that they are available in all views that declare them
+            .environmentObject(selectedPeriod) // put the selected period in the environment, so that they it is available in all views that declare it
+            .preferredColorScheme(.dark) // force the app to start in dark mode, even if the device is configured to light mode
         }
-        .environmentObject(periodBalances) // put the balances in the environment, so that they are available in all views that declare them
-        .environmentObject(selectedPeriod) // put the selected period in the environment, so that they it is available in all views that declare it
-//        .onAppear {
-//            createPeriods()
-//        }
-        .preferredColorScheme(.dark) // force the app to start in dark mode, even if the device is configured to light mode
-    }   
+        
+        else { // if there are no periods yet, show the setup screen
+            VStack {
+                Image(systemName: "dollarsign.circle")
+                    .resizable()
+                    .frame(width: 35, height: 35)
+                Text("Welcome to Next Expense")
+                    .font(.title)
+                Text("Tap here to get started")
+                    .font(.headline)
+            }
+            .onTapGesture {
+                createPeriods()
+                createTutorialCategories()
+            }
+            .preferredColorScheme(.dark) // force the app to start in dark mode, even if the device is configured to light mode
+        }
+    }
     
-    func createPeriods() {
+    
+    private func createPeriods() {
         if(periods.count == 0) { // create periods if there are none
             print("Creating periods")
             var components = DateComponents()
@@ -114,7 +133,7 @@ struct ContentView: View {
                 return formatter
             }()
             
-            for year in 2020...2025 {
+            for year in 2000...2070 {
                 components.year = year
                 for month in 1...12 {
                     components.month = month
@@ -133,6 +152,62 @@ struct ContentView: View {
                 }
             }
         }
+    }
+    
+    private func createTutorialCategories() { // create a few categories and groups
+        // Category groups:
+        let categoryGroup1 = CategoryGroup(context: viewContext)
+        categoryGroup1.id = UUID()
+        categoryGroup1.name = "Income"
+        categoryGroup1.order = 0
+        
+        let categoryGroup2 = CategoryGroup(context: viewContext)
+        categoryGroup2.id = UUID()
+        categoryGroup2.name = "Daily expenses"
+        categoryGroup2.order = 1
+        
+        let categoryGroup3 = CategoryGroup(context: viewContext)
+        categoryGroup3.id = UUID()
+        categoryGroup3.name = "Bills"
+        categoryGroup3.order = 2
+        
+        // Categories in each group:
+        let category1 = Category(context: viewContext)
+        category1.id = UUID()
+        category1.name = "Salary"
+        category1.type = "Income"
+        category1.categorygroup = categoryGroup1
+        category1.order = 0
+        
+        let category2 = Category(context: viewContext)
+        category2.id = UUID()
+        category2.name = "Groceries"
+        category2.type = "Expense"
+        category2.categorygroup = categoryGroup2
+        category2.order = 1
+        
+        let category3 = Category(context: viewContext)
+        category3.id = UUID()
+        category3.name = "Going out"
+        category3.type = "Expense"
+        category3.categorygroup = categoryGroup2
+        category3.order = 2
+        
+        let category4 = Category(context: viewContext)
+        category4.id = UUID()
+        category4.name = "Rent"
+        category4.type = "Expense"
+        category4.categorygroup = categoryGroup3
+        category4.order = 3
+        
+        let category5 = Category(context: viewContext)
+        category5.id = UUID()
+        category5.name = "Utilities"
+        category5.type = "Expense"
+        category5.categorygroup = categoryGroup3
+        category5.order = 4
+        
+        PersistenceController.shared.save() // save the items
     }
 }
 

@@ -105,10 +105,6 @@ struct TransactionDetailView: View {
                             }
                         }
                         if !transfer {
-                            Toggle("Expense", isOn: $expense)
-                                .onAppear {
-                                    expense = transaction.expense
-                                }
                             Toggle("Inflow", isOn: $income)
                                 .onAppear {
                                     income = transaction.income
@@ -152,35 +148,6 @@ struct TransactionDetailView: View {
                                             selectedPayee = payee // select this payee
                                             selectedCategory = payee.category // set the category to this payee's default category
                                             payeeFilter = payee.name ?? "" // display the payee in the filter field
-                                        }
-                                }
-                            }
-                        }
-                        
-                        if expense {
-                            TextField("Debtor", text: $debtorFilter)
-                                .onAppear {
-                                    debtorFilter = transaction.debtor?.name ?? ""
-                                    selectedDebtor = transaction.debtor
-                                }
-                            //                            .focused($debtorFocused)
-                                .onTapGesture {
-                                    //                                    withAnimation {
-                                    amount.showNumpad = false // hide the custom numpad, so I don't need to tap twice to get to the debtor
-                                    //                                    }
-                                }
-                            if((debtorFilter != "" && selectedDebtor == nil) || (debtorFilter != selectedDebtor?.name && debtorFilter != "")) { // display the list of matching payees when I start typing in the text field, until I have selected one. Also do that if I'm trying to modify the payee
-                                List(payees.filter({
-                                    debtorFilter == "" ? true: $0.name?.range(of: debtorFilter, options: .caseInsensitive) != nil // filter based on what is typed
-                                }), id: \.self) { payee in
-                                    Text(payee.name ?? "")
-                                        .onTapGesture {
-                                            print("Selected debtor \(payee.name ?? "")")
-                                            selectedDebtor = payee // select this payee
-                                            //                                                selectedCategory = payee.category // set the category to this payee's default category
-                                            //                                                selectedAccount = payee.account // set the account to this payee's default account
-                                            debtorFilter = payee.name ?? "" // display the payee in the filter field
-                                            //                                        debtorFocused = false // hide the keyboard
                                         }
                                 }
                             }
@@ -257,6 +224,44 @@ struct TransactionDetailView: View {
                         //                    .onAppear {
                         //                        currency = transaction.currency ?? "EUR"
                         //                    }
+                        
+                        if !transfer {
+                            Toggle("Expense", isOn: $expense)
+                                .onAppear {
+                                    expense = transaction.expense
+                                }
+                        }
+                        
+                        if expense {
+                            TextField("Debtor", text: $debtorFilter)
+                                .onAppear {
+                                    debtorFilter = transaction.debtor?.name ?? ""
+                                    selectedDebtor = transaction.debtor
+                                }
+                            //                            .focused($debtorFocused)
+                                .onTapGesture {
+                                    //                                    withAnimation {
+                                    amount.showNumpad = false // hide the custom numpad, so I don't need to tap twice to get to the debtor
+                                    //                                    }
+                                }
+                            if((debtorFilter != "" && selectedDebtor == nil) || (debtorFilter != selectedDebtor?.name && debtorFilter != "")) { // display the list of matching payees when I start typing in the text field, until I have selected one. Also do that if I'm trying to modify the payee
+                                List(payees.filter({
+                                    debtorFilter == "" ? true: $0.name?.range(of: debtorFilter, options: .caseInsensitive) != nil // filter based on what is typed
+                                }), id: \.self) { payee in
+                                    Text(payee.name ?? "")
+                                        .onTapGesture {
+                                            print("Selected debtor \(payee.name ?? "")")
+                                            selectedDebtor = payee // select this payee
+                                            //                                                selectedCategory = payee.category // set the category to this payee's default category
+                                            //                                                selectedAccount = payee.account // set the account to this payee's default account
+                                            debtorFilter = payee.name ?? "" // display the payee in the filter field
+                                            //                                        debtorFocused = false // hide the keyboard
+                                        }
+                                }
+                            }
+                        }                        
+                        
+                        
                         TextField("Memo", text: $memo)
                             .onAppear {
                                 memo = transaction.memo ?? ""
@@ -284,7 +289,7 @@ struct TransactionDetailView: View {
         Button {
             
             // If the account and the to account are identical, or the two accounts have different currencies, show an alert:
-            if selectedAccount == selectedToAccount || selectedAccount?.currency != selectedToAccount?.currency {
+            if transfer && (selectedAccount == selectedToAccount || selectedAccount?.currency != selectedToAccount?.currency) {
                 showingToAccountAlert = true
             }
             

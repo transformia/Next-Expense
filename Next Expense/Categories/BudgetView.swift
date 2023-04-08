@@ -71,8 +71,11 @@ struct BudgetView: View {
                             selectedPeriod.periodStartDate = period.startdate ?? Date()
                             selectedPeriod.periodChangedManually = true // make sure that the period doesnt reset to today's period automatically anymore
                             
+                            // Update the account, category and period balances:
+                            updateBalances()
+                            
                             // Create the balances that haven't been created yet for this period:
-                            createMissingBalances()
+//                            createMissingBalances()
                         }
                         
                         nextPeriod
@@ -164,7 +167,9 @@ struct BudgetView: View {
                             //                        }
                         }
                         
-                    } // end of List
+                    } // end of List                    
+                    .listStyle(PlainListStyle())
+//                    .padding(EdgeInsets(top: 0, leading: -20, bottom: 0, trailing: -20)) // reduce side padding of the list items
                     
                     
                     
@@ -364,6 +369,72 @@ struct BudgetView: View {
         }
     }
     
+    private func updateBalances() { // update the balance of each category for this period, of each account for today, and the period balances
+        
+        print("Updating category, account and period balances")
+        
+        // Category balances:
+        for category in categories {
+            if category.getBalance(period: selectedPeriod.period) == nil { // if there is no balance yet, create it
+                let categorybalance = Balance(context: viewContext)
+                categorybalance.populate(type: "categorybalance", amount: category.calcBalance(period: selectedPeriod.period).0 , period: selectedPeriod.period, account: nil, category: category)
+                categorybalance.populate(type: "categorybalancetotal", amount: category.calcBalance(period: selectedPeriod.period).1 , period: selectedPeriod.period, account: nil, category: category)
+            }
+            else { // if there is already a balance, update it
+                let categorybalance = category.getBalance(period: selectedPeriod.period)
+                categorybalance?.populate(type: "categorybalance", amount: category.calcBalance(period: selectedPeriod.period).0 , period: selectedPeriod.period, account: nil, category: category)
+                categorybalance?.populate(type: "categorybalancetotal", amount: category.calcBalance(period: selectedPeriod.period).1 , period: selectedPeriod.period, account: nil, category: category)
+            }
+        }
+        
+        // Account balances:
+        var consideredDate: Date
+        if selectedPeriod.period == getPeriod(date: Date()) {
+            consideredDate = Date()
+        }
+        else {
+            var components = DateComponents()
+            components.year = Int(selectedPeriod.period.year)
+            components.month = Int(selectedPeriod.period.month) + 1
+            components.day = 1
+            consideredDate = Calendar.current.startOfDay(for: Calendar.current.date(from: components) ?? Date())
+        }
+        
+        for account in accounts {
+            if account.getBalance(period: selectedPeriod.period) == nil { // if there is no balance yet, create it
+                let accountbalance = Balance(context: viewContext)
+                accountbalance.populate(type: "accountbalance", amount: account.calcBalance(toDate: consideredDate), period: selectedPeriod.period, account: account, category: nil)
+            }
+            else { // if there is already a balance, update it
+                let accountbalance = account.getBalance(period: selectedPeriod.period)
+                accountbalance?.populate(type: "accountbalance", amount: account.calcBalance(toDate: consideredDate), period: selectedPeriod.period, account: account, category: nil)
+            }
+        }
+        // Period balances:
+        let periodBalance = selectedPeriod.period.getBalance()
+        if periodBalance == nil {  // if there is no balance yet, create it
+            let periodBalance = Balance(context: viewContext)
+            let (incomeactual, expensesactual) = selectedPeriod.period.calcBalances()
+            periodBalance.populate(type: "incomeactual", amount: incomeactual, period: selectedPeriod.period, account: nil, category: nil)
+            periodBalance.populate(type: "expensesactual", amount: expensesactual, period: selectedPeriod.period, account: nil, category: nil)            
+        }
+        else { // if there is already a balance, update it
+            let periodBalance = selectedPeriod.period.getBalance()
+            let (incomeactual, expensesactual) = selectedPeriod.period.calcBalances()
+            periodBalance?.populate(type: "incomeactual", amount: incomeactual, period: selectedPeriod.period, account: nil, category: nil)
+            periodBalance?.populate(type: "expensesactual", amount: expensesactual, period: selectedPeriod.period, account: nil, category: nil)
+        }
+        
+        PersistenceController.shared.save() // save the new balances
+        
+        // Update the actual and budget balances in the environment object:
+        let periodBalance2 = selectedPeriod.period.getBalance()
+        periodBalances.incomeActual = periodBalance2?.incomeactual ?? 0.0
+        periodBalances.expensesActual = periodBalance2?.expensesactual ?? 0.0
+        (periodBalances.incomeBudget, periodBalances.expensesBudget) = selectedPeriod.period.calcBudgets()
+    }
+    
+    /*
     private func createMissingBalances() {
         // Create the balances that haven't been created yet for this period:
         
@@ -411,6 +482,7 @@ struct BudgetView: View {
         periodBalances.expensesActual = periodBalance?.expensesactual ?? 0.0
         (periodBalances.incomeBudget, periodBalances.expensesBudget) = selectedPeriod.period.calcBudgets()
     }
+    */
     
     private func getPeriod(date: Date) -> Period { // get the period corresponding to the chosen date. Exists in AccountDetailView, AddTransactionView, MiniReportingView, ReportingView, FxRateView, CSVExportView, DebtorView, BudgetView, ...?
         let year = Calendar.current.dateComponents([.year], from: date).year ?? 1900

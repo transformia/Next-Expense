@@ -48,40 +48,34 @@ struct TransactionListView: View {
     
     var body: some View {
         ZStack { // to be able to show an animation on top when a category balances changes
-            
-            NavigationView {
-                VStack {
-                    
-                    // Show button to create recurring transactions that are due:
-                    if(countRecurringTransactions() > 0) {
-                        Button {
-                            processRecurringTransactions()
-                        } label: {
-                            Text("Process recurring: \(countRecurringTransactions())")
-                        }
-                        .padding()
+            VStack {
+                
+                // Show button to create recurring transactions that are due:
+                if(countRecurringTransactions() > 0) {
+                    Button {
+                        processRecurringTransactions()
+                    } label: {
+                        Text("Process recurring: \(countRecurringTransactions())")
                     }
-                    
-                    NavigationView {
-                        List {
-                            ForEach(periods) { period in
-                                if (
-                                    (showFutureTransactions && period.transactions?.filter({(category == nil || ($0 as! Transaction).category == category) && (account == nil || ($0 as! Transaction).account == account)}).count ?? 0 > 0) // if future transactions are shown, and there are transactions in the period, either with the selected account or category, or with no selection of account or category
-                                    || (period.transactions?.filter({Calendar.current.startOfDay(for: ($0 as! Transaction).date ?? Date()) <= Date() && (category == nil || ($0 as! Transaction).category == category) && (account == nil || ($0 as! Transaction).account == account)}).count ?? 0 > 0) // or if there are non-future transactions in the period, either with the selected account or category, or with no selection of account or category
-                                ) {
-                                    
-                                    PeriodTransactionsView(period: period)
-                                    
-                                    if period.showtransactions {
-                                        ForEach(transactions) { transaction in
-                                            if transaction.period == period { // if the transaction is in this period
-                                                if(category == nil || transaction.category == category) { // if there is no filter, or the transaction matches the filter
-                                                    if(account == nil || transaction.account == account || transaction.toaccount == account) { // if there is no filter, or the transaction matches the filter
-                                                        if(payee == nil || transaction.payee == payee) { // if there is no filter, or the transaction matches the filter
-                                                            if showFutureTransactions || Calendar.current.startOfDay(for: transaction.date ?? Date()) <= Date() { // if I want to show future transactions, or if the start of the day of the transaction date is in the past
-                                                                TransactionView(transaction: transaction, account: account)
-                                                            }
-                                                        }
+                    .padding()
+                }
+                List {
+                    ForEach(periods) { period in
+                        if (
+                            (showFutureTransactions && period.transactions?.filter({(category == nil || ($0 as! Transaction).category == category) && (account == nil || ($0 as! Transaction).account == account)}).count ?? 0 > 0) // if future transactions are shown, and there are transactions in the period, either with the selected account or category, or with no selection of account or category
+                            || (period.transactions?.filter({Calendar.current.startOfDay(for: ($0 as! Transaction).date ?? Date()) <= Date() && (category == nil || ($0 as! Transaction).category == category) && (account == nil || ($0 as! Transaction).account == account)}).count ?? 0 > 0) // or if there are non-future transactions in the period, either with the selected account or category, or with no selection of account or category
+                        ) {
+                            
+                            PeriodTransactionsView(period: period)
+                            
+                            if period.showtransactions {
+                                ForEach(transactions) { transaction in
+                                    if transaction.period == period { // if the transaction is in this period
+                                        if(category == nil || transaction.category == category) { // if there is no filter, or the transaction matches the filter
+                                            if(account == nil || transaction.account == account || transaction.toaccount == account) { // if there is no filter, or the transaction matches the filter
+                                                if(payee == nil || transaction.payee == payee) { // if there is no filter, or the transaction matches the filter
+                                                    if showFutureTransactions || Calendar.current.startOfDay(for: transaction.date ?? Date()) <= Date() { // if I want to show future transactions, or if the start of the day of the transaction date is in the past
+                                                        TransactionView(transaction: transaction, account: account)
                                                     }
                                                 }
                                             }
@@ -89,49 +83,50 @@ struct TransactionListView: View {
                                     }
                                 }
                             }
-                            
-//                            ForEach(transactions) { transaction in
-//                                if(category == nil || transaction.category == category) { // if there is no filter, or the transaction matches the filter
-//                                    if(account == nil || transaction.account == account || transaction.toaccount == account) { // if there is no filter, or the transaction matches the filter
-//                                        if(payee == nil || transaction.payee == payee) { // if there is no filter, or the transaction matches the filter
-//                                            if showFutureTransactions || Calendar.current.startOfDay(for: transaction.date ?? Date()) <= Date() { // if I want to show future transactions, or if the start of the day of the transaction date is in the past
-//                                                TransactionView(transaction: transaction, account: account)
-//                                            }
-//                                        }
-//                                    }
-//                                }
-//                            }
-                        }
-                        .padding(EdgeInsets(top: 0, leading: -10, bottom: 0, trailing: -10)) // reduce side padding of the list items
-                        .sheet(isPresented: $addTransactionView) {
-                            AddTransactionView(payee: nil, account: account ?? accounts[0], category: category ?? categories[0])
                         }
                     }
                     
-                    Button {
-                        if(categories.count > 0 && accounts.count > 0) {
-                            addTransactionView.toggle() // show the view where I can add a new element
-                        }
-                        else {
-                            print("You need to create at least one account and one category before you can create a transaction")
-                        }
-                    } label: {
-                        Image(systemName: "plus")
-                            .resizable()
-                            .frame(width: 18, height: 18)
-                            .foregroundColor(.white)
-                            .padding(6)
-                            .background(.green)
-                            .clipShape(Circle())
-                    }
-                    .padding(.bottom, 20.0)
+                    //                            ForEach(transactions) { transaction in
+                    //                                if(category == nil || transaction.category == category) { // if there is no filter, or the transaction matches the filter
+                    //                                    if(account == nil || transaction.account == account || transaction.toaccount == account) { // if there is no filter, or the transaction matches the filter
+                    //                                        if(payee == nil || transaction.payee == payee) { // if there is no filter, or the transaction matches the filter
+                    //                                            if showFutureTransactions || Calendar.current.startOfDay(for: transaction.date ?? Date()) <= Date() { // if I want to show future transactions, or if the start of the day of the transaction date is in the past
+                    //                                                TransactionView(transaction: transaction, account: account)
+                    //                                            }
+                    //                                        }
+                    //                                    }
+                    //                                }
+                    //                            }
                 }
-                .navigationTitle("Transactions")
-                .navigationBarTitleDisplayMode(.inline)
-                .toolbar {
-                    ToolbarItem(placement: .navigationBarTrailing) {
-                        showFutureTransactionsButton
+                .listStyle(PlainListStyle())
+                //                        .padding(EdgeInsets(top: 0, leading: -20, bottom: 0, trailing: -20)) // reduce side padding of the list items
+                .sheet(isPresented: $addTransactionView) {
+                    AddTransactionView(payee: nil, account: account ?? accounts[0], category: category ?? categories[0])
+                }
+                
+                Button {
+                    if(categories.count > 0 && accounts.count > 0) {
+                        addTransactionView.toggle() // show the view where I can add a new element
                     }
+                    else {
+                        print("You need to create at least one account and one category before you can create a transaction")
+                    }
+                } label: {
+                    Image(systemName: "plus")
+                        .resizable()
+                        .frame(width: 18, height: 18)
+                        .foregroundColor(.white)
+                        .padding(6)
+                        .background(.green)
+                        .clipShape(Circle())
+                }
+                .padding(.bottom, 20.0)
+            }
+            .navigationTitle("Transactions")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    showFutureTransactionsButton
                 }
             }
             
@@ -161,7 +156,7 @@ struct TransactionListView: View {
                     else { // showing the balance after the transaction
                         HStack {
                             Text(periodBalances.category.name ?? "")
-    //                        Text(periodBalances.category.calcRemainingBudget(period: selectedPeriod.period) / 100, format: .currency(code: "EUR"))
+                            //                        Text(periodBalances.category.calcRemainingBudget(period: selectedPeriod.period) / 100, format: .currency(code: "EUR"))
                             Text(periodBalances.remainingBudgetAfter / 100, format: .currency(code: "EUR"))
                         }
                         .padding()
@@ -172,7 +167,6 @@ struct TransactionListView: View {
                     }
                 }
             }
-            
         }  // end of ZStack
     }
     

@@ -69,10 +69,12 @@ struct ContentView: View {
                         Label("Accounts", systemImage: "banknote")
                     }
                 
-                TransactionListView(payee: nil, account: nil, category: nil)
-                    .tabItem {
-                        Label("Transactions", systemImage: "list.triangle")
-                    }
+                NavigationView { // NavigationView added here so that I don't have two of them when calling TransactionListView from other places
+                    TransactionListView(payee: nil, account: nil, category: nil)
+                }
+                .tabItem {
+                    Label("Transactions", systemImage: "list.triangle")
+                }
                 
                 PayeeListView()
                     .tabItem {
@@ -84,10 +86,10 @@ struct ContentView: View {
                         Label("Expenses", systemImage: "banknote")
                     }
                 
-                //            PeriodListView()
-                //                .tabItem {
-                //                    Label("Periods", systemImage: "questionmark.folder.fill")
-                //                }
+//                PeriodListView()
+//                    .tabItem {
+//                        Label("Periods", systemImage: "questionmark.folder.fill")
+//                    }
                 //            BudgetListView()
                 //                .tabItem {
                 //                    Label("Budgets", systemImage: "questionmark.folder.fill")
@@ -109,7 +111,7 @@ struct ContentView: View {
                     .frame(width: 35, height: 35)
                 Text("Welcome to Next Expense")
                     .font(.title)
-                Text("Tap here to get started")
+                Text("Tap here to CREATE PERIODS AND TEST CATEGORIES")
                     .font(.headline)
             }
             .onTapGesture {

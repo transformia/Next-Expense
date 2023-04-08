@@ -88,7 +88,7 @@ struct AddTransactionView: View {
     
     var body: some View {
         NavigationView { // so that the pickers work
-            ZStack(alignment: .bottom) { // Stack the form and the numpad
+            ZStack(alignment: .bottom) { // Stack the form, the numpad and the payee or debtor list
                 Form {
                     Group {
                         DatePicker("Date", selection: $date, displayedComponents: .date)
@@ -110,17 +110,16 @@ struct AddTransactionView: View {
                             }
                         
                         if !transfer {
-                            Toggle("Expense", isOn: $expense)
                             Toggle("Inflow", isOn: $income)
                         }
                         
                         Text(Double(amount.intAmount) / 100, format: .currency(code: currency))
-//                            .foregroundColor(income ? .green : .primary)
+                        //                            .foregroundColor(income ? .green : .primary)
                             .foregroundColor(income || (transfer && selectedAccount?.type == "External" && selectedToAccount?.type == "Budget") ? .green : .primary) // green for an income, or for a transfer from an external account to a budget account
                             .onTapGesture {
-//                                withAnimation {
+                                //                                withAnimation {
                                 amount.showNumpad = true // display the custom numpad
-//                                }
+                                //                                }
                                 payeeFocused = false // in case the payee field is selected, remove focus from it so that the keyboard closes
                             }
                             .onAppear {
@@ -130,60 +129,40 @@ struct AddTransactionView: View {
                     Group {
                         if(!transfer) {
                             TextField("Payee", text: $payeeFilter)
+                                .focused($payeeFocused)
+                                .disableAutocorrection(true)
                                 .onAppear {
                                     selectedPayee = payee // default to the provided value
                                     payeeFilter = payee?.name ?? ""
                                 }
-                                .focused($payeeFocused)
+                                .onSubmit { // if I press enter:
+                                    if payeeFocused { // if the payee list is showing, select the first value visible
+                                        // If there is at least one value visible, select the first one:
+                                        if payees.filter({payeeFilter == "" ? true: $0.name?.range(of: payeeFilter, options: .caseInsensitive) != nil}).count > 0 {
+                                            selectedPayee = payees.filter({payeeFilter == "" ? true: $0.name?.range(of: payeeFilter, options: .caseInsensitive) != nil})[0]
+                                            print("Selecting \(selectedPayee?.name ?? "")")
+                                            payeeFilter = selectedPayee?.name ?? "" // display the payee in the filter field
+                                            selectedCategory = selectedPayee?.category // set the category to this payee's default category
+                                            selectedAccount = selectedPayee?.account // set the account to this payee's default account
+//                                            payeeFocused = false // close the keyboard
+                                        }
+                                        
+                                        else { // if there is no value matching the filter, create a new payee as long as the filter isn't empty, and select it as a payee
+                                            if payeeFilter != "" {
+                                                print("Creating new payee \(payeeFilter)")
+                                                let payee = Payee(context: viewContext) // create a new payee
+                                                payee.id = UUID()
+                                                payee.name = payeeFilter
+                                                selectedPayee = payee // select the new payee
+                                            }
+                                        }
+                                    }
+                                }
                                 .onTapGesture {
                                     //                                    withAnimation {
                                     amount.showNumpad = false // hide the custom numpad, so I don't need to tap twice to get to the payee
                                     //                                    }
                                 }
-                            if((payeeFilter != "" && selectedPayee == nil) || (payeeFilter != selectedPayee?.name && payeeFilter != "")) { // display the list of matching payees when I start typing in the text field, until I have selected one. Also do that if I'm trying to modify the payee
-                                List(payees.filter({
-                                    payeeFilter == "" ? true: $0.name?.range(of: payeeFilter, options: .caseInsensitive) != nil // filter based on what is typed
-                                }), id: \.self) { payee in
-                                    Text(payee.name ?? "")
-                                        .onTapGesture {
-                                            print("Selected \(payee.name ?? "")")
-                                            selectedPayee = payee // select this payee
-                                            selectedCategory = payee.category // set the category to this payee's default category
-                                            selectedAccount = payee.account // set the account to this payee's default account
-                                            payeeFilter = payee.name ?? "" // display the payee in the filter field
-                                            payeeFocused = false // hide the keyboard
-                                        }
-                                }
-                            }
-                        }
-                            
-                        if expense {
-                            TextField("Debtor", text: $debtorFilter)
-                            //                                    .onAppear {
-                            //                                        selectedPayee = payee // default to the provided value
-                            //                                        payeeFilter = payee?.name ?? ""
-                            //                                    }
-                                .focused($debtorFocused)
-                                .onTapGesture {
-                                    //                                    withAnimation {
-                                    amount.showNumpad = false // hide the custom numpad, so I don't need to tap twice to get to the debtor
-                                    //                                    }
-                                }
-                            if((debtorFilter != "" && selectedDebtor == nil) || (debtorFilter != selectedDebtor?.name && debtorFilter != "")) { // display the list of matching payees when I start typing in the text field, until I have selected one. Also do that if I'm trying to modify the payee
-                                List(payees.filter({
-                                    debtorFilter == "" ? true: $0.name?.range(of: debtorFilter, options: .caseInsensitive) != nil // filter based on what is typed
-                                }), id: \.self) { payee in
-                                    Text(payee.name ?? "")
-                                        .onTapGesture {
-                                            print("Selected debtor \(payee.name ?? "")")
-                                            selectedDebtor = payee // select this payee
-                                            //                                                selectedCategory = payee.category // set the category to this payee's default category
-                                            //                                                selectedAccount = payee.account // set the account to this payee's default account
-                                            debtorFilter = payee.name ?? "" // display the payee in the filter field
-                                            debtorFocused = false // hide the keyboard
-                                        }
-                                }
-                            }
                         }
                         
                         if ( (!transfer && selectedAccount?.type == "Budget") || (transfer && selectedAccount?.type != selectedToAccount?.type) ) { // show the category if this is a normal transaction from a budget account, or a transfer between a budget and an external account
@@ -205,7 +184,7 @@ struct AddTransactionView: View {
                                 }
                             }
                         }
-                            
+                        
                         Picker("Account", selection: $selectedAccount) {
                             ForEach(accounts, id: \.self) { (account: Account) in
                                 Text(account.name ?? "")
@@ -252,19 +231,57 @@ struct AddTransactionView: View {
                                 }
                             }
                             // NOT NEEDED BECAUSE I CANNOT SELECT A TO ACCOUNT WITH A DIFFERENT CURRENCY, NOR THE SAME AS THE FROM ACCOUNT:
-//                            .onChange(of: selectedToAccount) { _ in
-//                                // If I have selected the same account as the from account, or the accounts now have different currencies, change the from account to another account with the same currency, if there is one:
-//                                if selectedToAccount == selectedAccount || selectedToAccount?.currency != selectedAccount?.currency {
-//                                    if accounts.filter({$0.currency == selectedToAccount?.currency}).count > 1 { // if there are at least 2 accounts with the same currency as the selected to account
-//                                        if accounts.filter({$0.currency == selectedToAccount?.currency})[0] != selectedToAccount {
-//                                            selectedAccount = accounts.filter({$0.currency == selectedToAccount?.currency})[0] // if the first account with the same currency is different from the to account, select it
-//                                        }
-//                                        else {
-//                                            selectedAccount = accounts.filter({$0.currency == selectedToAccount?.currency})[1] // else select the second one
-//                                        }
-//                                    }
-//                                }
-//                            }
+                            //                            .onChange(of: selectedToAccount) { _ in
+                            //                                // If I have selected the same account as the from account, or the accounts now have different currencies, change the from account to another account with the same currency, if there is one:
+                            //                                if selectedToAccount == selectedAccount || selectedToAccount?.currency != selectedAccount?.currency {
+                            //                                    if accounts.filter({$0.currency == selectedToAccount?.currency}).count > 1 { // if there are at least 2 accounts with the same currency as the selected to account
+                            //                                        if accounts.filter({$0.currency == selectedToAccount?.currency})[0] != selectedToAccount {
+                            //                                            selectedAccount = accounts.filter({$0.currency == selectedToAccount?.currency})[0] // if the first account with the same currency is different from the to account, select it
+                            //                                        }
+                            //                                        else {
+                            //                                            selectedAccount = accounts.filter({$0.currency == selectedToAccount?.currency})[1] // else select the second one
+                            //                                        }
+                            //                                    }
+                            //                                }
+                            //                            }
+                        }
+                        
+                        if !transfer {
+                            Toggle("Expense", isOn: $expense)
+                        }
+                        
+                        if expense {
+                            TextField("Debtor", text: $debtorFilter)
+                            //                                    .onAppear {
+                            //                                        selectedPayee = payee // default to the provided value
+                            //                                        payeeFilter = payee?.name ?? ""
+                            //                                    }
+                                .focused($debtorFocused)
+                                .disableAutocorrection(true)
+                                .onTapGesture {
+                                    //                                    withAnimation {
+                                    amount.showNumpad = false // hide the custom numpad, so I don't need to tap twice to get to the debtor
+                                    //                                    }
+                                }
+                                .onSubmit { // if I press enter:
+                                    if debtorFocused { // if the debtor list is showing, select the first value visible
+                                        // If there is at least one value visible, select the first one:
+                                        if payees.filter({debtorFilter == "" ? true: $0.name?.range(of: debtorFilter, options: .caseInsensitive) != nil}).count > 0 {
+                                            selectedDebtor = payees.filter({debtorFilter == "" ? true: $0.name?.range(of: debtorFilter, options: .caseInsensitive) != nil})[0]
+                                            print("Selecting \(selectedDebtor?.name ?? "")")
+                                            debtorFilter = selectedDebtor?.name ?? "" // display the debtor in the filter field
+                                        }
+                                        else { // if there is no value matching the filter, create a new payee as long as the filter isn't empty, and select it as a debtor
+                                            if debtorFilter != "" {
+                                                print("Creating new payee \(debtorFilter)")
+                                                let payee = Payee(context: viewContext) // create a new payee
+                                                payee.id = UUID()
+                                                payee.name = debtorFilter
+                                                selectedDebtor = payee // select the new debtor
+                                            }
+                                        }
+                                    }
+                                }
                         }
                         
                         TextField("Memo", text: $memo)
@@ -272,6 +289,106 @@ struct AddTransactionView: View {
                     }
                 }
                 
+                
+                // Second element of the ZStack:
+                if(payeeFocused) { // if I am trying to select a payee
+                    
+                    // If there is no payee matching the filter, show the option to create one:
+                    if payees.filter({payeeFilter == "" ? true: $0.name?.range(of: payeeFilter, options: .caseInsensitive) != nil}).count == 0 {
+                        List {
+                            Text("New: \(payeeFilter)")
+                                .listRowBackground(Color.clear) // remove the grey background from the list items
+                                .onTapGesture {
+                                    payeeFocused = false // hide the keyboard
+                                    if payeeFilter != "" { // create a new payee as long as the filter isn't empty
+                                        print("Creating new payee \(payeeFilter)")
+                                        let payee = Payee(context: viewContext) // create a new payee
+                                        payee.id = UUID()
+                                        payee.name = payeeFilter
+                                        selectedPayee = payee // select the new payee
+                                    }
+                                }
+                        }
+                        .listStyle(PlainListStyle()) // removed padding and background
+                        .frame(width: 280, height: 177)
+                        .background(.black)
+                        .cornerRadius(8)
+                        .offset(x: -32, y: -550)
+                    }
+                    
+                    else { // else if there is at least one match, show the matches so that I can select one
+                        List(payees.filter({
+                            payeeFilter == "" ? true: $0.name?.range(of: payeeFilter, options: .caseInsensitive) != nil // filter based on what is typed
+                        }), id: \.self) { payee in
+                            Text(payee.name ?? "")
+                                .listRowBackground(Color.clear) // remove the grey background from the list items
+                                .onTapGesture {
+                                    print("Selected \(payee.name ?? "")")
+                                    selectedPayee = payee // select this payee
+                                    selectedCategory = payee.category // set the category to this payee's default category
+                                    selectedAccount = payee.account // set the account to this payee's default account
+                                    payeeFilter = payee.name ?? "" // display the payee in the filter field
+                                    payeeFocused = false // hide the keyboard
+                                }
+                        }
+                        .listStyle(PlainListStyle()) // removed padding and background
+                        .frame(width: 280, height: 177)
+                        .background(.black)
+                        .cornerRadius(8)
+                        .offset(x: -32, y: -550)
+                    }
+                }
+                
+                // Third element of the ZStack:
+                
+                
+                if(debtorFocused) { // if I am trying to select a debtor
+                    
+                    // If there is no payee matching the filter, show the option to create one:
+                    if payees.filter({debtorFilter == "" ? true: $0.name?.range(of: debtorFilter, options: .caseInsensitive) != nil}).count == 0 {
+                        List {
+                            Text("New: \(debtorFilter)")
+                                .listRowBackground(Color.clear) // remove the grey background from the list items
+                                .onTapGesture {
+                                    debtorFocused = false // hide the keyboard
+                                    if debtorFilter != "" { // create a new debtor as long as the filter isn't empty
+                                        print("Creating new payee \(debtorFilter)")
+                                        let payee = Payee(context: viewContext) // create a new payee
+                                        payee.id = UUID()
+                                        payee.name = debtorFilter
+                                        selectedDebtor = payee // select the new payee as a debtor
+                                    }
+                                }
+                        }
+                        .listStyle(PlainListStyle()) // removed padding and background
+                        .frame(width: 280, height: 177)
+                        .background(.black)
+                        .cornerRadius(8)
+                        .offset(x: -32, y: -375)
+                    }
+                    
+                    else { // else if there is at least one match, show the matches so that I can select one
+                        List(payees.filter({
+                            debtorFilter == "" ? true: $0.name?.range(of: debtorFilter, options: .caseInsensitive) != nil // filter based on what is typed
+                        }), id: \.self) { payee in
+                            Text(payee.name ?? "")
+                                .listRowBackground(Color.clear) // remove the grey background from the list items
+                                .onTapGesture {
+                                    print("Selected \(payee.name ?? "")")
+                                    selectedDebtor = payee // select this payee
+                                    debtorFilter = payee.name ?? "" // display the payee in the debtor filter field
+                                    debtorFocused = false // hide the keyboard
+                                }
+                        }
+                        .listStyle(PlainListStyle()) // removed padding and background
+                        .frame(width: 280, height: 177)
+                        .background(.black)
+                        .cornerRadius(8)
+                        .offset(x: -32, y: -375)
+                    }
+                }
+                
+                // Fourth element of the ZStack:
                 if(amount.showNumpad) {
                     NumpadView(amount: amount)
                         .frame(height: 300, alignment: .bottom)
@@ -292,8 +409,8 @@ struct AddTransactionView: View {
     var createTransactionButton: some View {
         Button(action: {
             
-            // If the account and the to account are identical, or the two accounts have different currencies, show an alert:
-            if selectedAccount == selectedToAccount || selectedAccount?.currency != selectedToAccount?.currency {
+            // If this is a transfer: if the account and the to account are identical, or the two accounts have different currencies, show an alert:
+            if transfer && (selectedAccount == selectedToAccount || selectedAccount?.currency != selectedToAccount?.currency) {
                 showingToAccountAlert = true
             }
             
@@ -311,29 +428,31 @@ struct AddTransactionView: View {
             
             else { // if a valid account and category have been selected, create and save the transaction
                 
-                // Create a new payee if necessary:
-                if((payeeFilter != "" && selectedPayee == nil) || (payeeFilter != selectedPayee?.name && payeeFilter != "")) { // if a payee has been entered, but none has been selected, create a new payee. Also do that if I selected a payee, then changed my mind and typed a completely new one
-                    let payee = Payee(context: viewContext)
-                    payee.id = UUID()
-                    payee.name = payeeFilter
-                    payee.category = selectedCategory
-                    payee.account = selectedAccount
-                    selectedPayee = payee
-                }
+                // DONE WHEN SELECTING THE PAYEE INSTEAD:
+//                // Create a new payee if necessary:
+//                if((payeeFilter != "" && selectedPayee == nil) || (payeeFilter != selectedPayee?.name && payeeFilter != "")) { // if a payee has been entered, but none has been selected, create a new payee. Also do that if I selected a payee, then changed my mind and typed a completely new one
+//                    let payee = Payee(context: viewContext)
+//                    payee.id = UUID()
+//                    payee.name = payeeFilter
+//                    payee.category = selectedCategory
+//                    payee.account = selectedAccount
+//                    selectedPayee = payee
+//                }
                 
-                // Else change the default account and category of the payee:
-                else if(selectedPayee != nil) {
+                // Change the default account and category of the payee, if one is selected:
+                if(selectedPayee != nil) {
                     selectedPayee?.category = selectedCategory // if a payee has been selected, change its default category to the one I used this time
                     selectedPayee?.account = selectedAccount // if a payee has been selected, change its default account to the one I used this time
                 }
                 
-                // Create a new payee for the debtor if necessary:
-                if((debtorFilter != "" && selectedDebtor == nil) || (debtorFilter != selectedDebtor?.name && debtorFilter != "")) { // if a debtor has been entered, but none has been selected, create a new payee. Also do that if I selected a debtor, then changed my mind and typed a completely new one
-                    let payee = Payee(context: viewContext)
-                    payee.id = UUID()
-                    payee.name = debtorFilter
-                    selectedDebtor = payee
-                }
+                // DONE WHEN SELECTING THE DEBTOR INSTEAD:
+//                // Create a new payee for the debtor if necessary:
+//                if((debtorFilter != "" && selectedDebtor == nil) || (debtorFilter != selectedDebtor?.name && debtorFilter != "")) { // if a debtor has been entered, but none has been selected, create a new payee. Also do that if I selected a debtor, then changed my mind and typed a completely new one
+//                    let payee = Payee(context: viewContext)
+//                    payee.id = UUID()
+//                    payee.name = debtorFilter
+//                    selectedDebtor = payee
+//                }
                 
                 // Before I create the transaction, save the current remaining budget for the transaction's period, so that it can be displayed after:
 //                periodBalances.remainingBudgetBefore = selectedCategory?.calcRemainingBudget(period: selectedPeriod.period) ?? 0.0

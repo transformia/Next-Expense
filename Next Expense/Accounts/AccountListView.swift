@@ -60,6 +60,15 @@ struct AccountListView: View {
                                 showBudgetAccounts.toggle()
                             }
                         }
+                        .onAppear {
+                            updateAccountTotals()
+                        }
+                        .onChange(of: periodBalances.expensesActual) { _ in
+                            updateAccountTotals()
+                        }
+                        .onChange(of: periodBalances.incomeActual) { _ in
+                            updateAccountTotals()
+                        }
                         
                         if showBudgetAccounts {
                             ForEach(accounts) { account in
@@ -110,18 +119,10 @@ struct AccountListView: View {
                             Text(periodBalances.totalBalance / 100, format: .currency(code: defaultCurrency))
                                 .font(.callout)
                         }
-                        .onAppear {
-                            updateAccountTotals()
-                        }
-                        .onChange(of: periodBalances.expensesActual) { _ in
-                            updateAccountTotals()
-                        }
-                        .onChange(of: periodBalances.incomeActual) { _ in
-                            updateAccountTotals()
-                        }
                         
                     }
-                    .padding(EdgeInsets(top: 0, leading: -10, bottom: 0, trailing: -10)) // reduce side padding of the list items
+                    .listStyle(PlainListStyle())
+//                    .padding(EdgeInsets(top: 0, leading: -20, bottom: 0, trailing: -20)) // reduce side padding of the list items
                     .sheet(isPresented: $addAccountView) {
                         AddAccountView()
                     }

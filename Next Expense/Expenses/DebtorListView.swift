@@ -26,6 +26,7 @@ struct DebtorListView: View {
                     }
                 }
             }
+            .listStyle(PlainListStyle())
             .navigationTitle("Expenses")
             .navigationBarTitleDisplayMode(.inline)
         }

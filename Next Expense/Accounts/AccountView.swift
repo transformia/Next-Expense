@@ -47,6 +47,7 @@ struct AccountView: View {
 //                    PersistenceController.shared.save()
                 }
         }
+//        .listRowBackground(Color.clear) // remove the grey background from the list items - WHY DOESN'T THIS WORK??
     }
     
     func getPeriod(date: Date) -> Period { // get the period corresponding to the chosen date. Exists in AccountDetailView, AddTransactionView, MiniReportingView, ReportingView, FxRateView, CSVExportView, DebtorView, CategoryListView...?

@@ -40,6 +40,7 @@ struct PayeeListView: View {
                         }
                     }
                 }
+                .listStyle(PlainListStyle())
                 .sheet(isPresented: $addTransactionView) {
                     AddTransactionView(payee: nil, account: accounts[0], category: categories[0])
                 }

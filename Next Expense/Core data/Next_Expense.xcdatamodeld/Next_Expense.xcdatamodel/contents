@@ -14,6 +14,7 @@
     <entity name="Balance" representedClassName="Balance" syncable="YES" codeGenerationType="class">
         <attribute name="accountbalance" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
         <attribute name="categorybalance" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="categorybalancetotal" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
         <attribute name="expensesactual" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
         <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="incomeactual" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>

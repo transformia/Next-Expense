@@ -20,6 +20,11 @@ struct CategoryView: View {
         animation: .default)
     private var budgets: FetchedResults<Budget> // to be able to calculate the total budgets for the period
     
+    @FetchRequest(
+        sortDescriptors: [NSSortDescriptor(keyPath: \Period.startdate, ascending: true)],
+        animation: .default)
+    private var periods: FetchedResults<Period> // to be able to find the previous period
+    
     let category: Category
     
     @EnvironmentObject var selectedPeriod: ContentView.SelectedPeriod // get the selected period from the environment
@@ -39,13 +44,21 @@ struct CategoryView: View {
             
             Spacer()
             
-            Text(Double(categoryBudget.intAmount) / 100, format: .currency(code: defaultCurrency)) // amount budgeted
+            Text(Double(category.getBudget(period: selectedPeriod.period)) / 100, format: .currency(code: defaultCurrency)) // amount budgeted
                 .onAppear {
                     categoryBudget.intAmount = category.getBudget(period: selectedPeriod.period)
                 }
                 .onChange(of: selectedPeriod.period) { _ in
                     categoryBudget.intAmount = category.getBudget(period: selectedPeriod.period) // recalculate the monthly budget balances when I switch periods
                 }
+            
+//            Text(Double(categoryBudget.intAmount) / 100, format: .currency(code: defaultCurrency)) // amount budgeted
+//                .onAppear {
+//                    categoryBudget.intAmount = category.getBudget(period: selectedPeriod.period)
+//                }
+//                .onChange(of: selectedPeriod.period) { _ in
+//                    categoryBudget.intAmount = category.getBudget(period: selectedPeriod.period) // recalculate the monthly budget balances when I switch periods
+//                }
 //                .onChange(of: categoryBudget.intAmount) { _ in
 //                    saveBudget()
 //                    // Calculate the period budgets - done in MiniReportingView and CategoryView:
@@ -95,9 +108,12 @@ struct CategoryView: View {
             Spacer()
             
             if(category.type == "Expense") { // show the remaining budget - but only for expense categories, not for income categories
-                Text((Double(categoryBudget.intAmount) + (category.getBalance(period: selectedPeriod.period)?.categorybalance ?? 00)) / 100, format: .currency(code: defaultCurrency)) // remaining budget
+                Text((Double(category.getBudget(period: selectedPeriod.period)) + (category.getBalance(period: selectedPeriod.period)?.categorybalance ?? 00)) / 100, format: .currency(code: defaultCurrency)) // remaining budget
+//                Text((Double(categoryBudget.intAmount) + (category.getBalance(period: selectedPeriod.period)?.categorybalance ?? 00)) / 100, format: .currency(code: defaultCurrency)) // remaining budget
                     .font(.caption)
-                    .foregroundColor((Double(categoryBudget.intAmount) + (category.getBalance(period: selectedPeriod.period)?.categorybalance ?? 00)) < 0 ? .red : .green)
+//                    .foregroundColor((Double(categoryBudget.intAmount) + (category.getBalance(period: selectedPeriod.period)?.categorybalance ?? 00)) < 0 ? .red : .green)
+//                    .foregroundColor((Double(categoryBudget.intAmount) + (category.getBalance(period: selectedPeriod.period)?.categorybalance ?? 00)) < 0 ? .red : (Double(categoryBudget.intAmount) + (category.getBalance(period: selectedPeriod.period)?.categorybalancetotal ?? 00)) < 0 ? .yellow : .green)
+                    .foregroundColor((Double(category.getBudget(period: selectedPeriod.period)) + (category.getBalance(period: selectedPeriod.period)?.categorybalancetotal ?? 00)) >= 0 ? .green : (Double(category.getBudget(period: selectedPeriod.period)) + (category.getBalance(period: selectedPeriod.period)?.categorybalance ?? 00)) >= 0 ? .yellow : .red)
             }
         }
         .sheet(isPresented: $categoryBudget.showNumpad) {
@@ -105,16 +121,38 @@ struct CategoryView: View {
                 .presentationDetents([.height(300)])
         }
         .swipeActions(edge: .trailing) {
-            budgetToSpent
+//            budgetToSpent
+            budgetToSpentIncludingFuture
+            budgetToLastMonth
         }
     }
     
-    var budgetToSpent: some View {
+//    var budgetToSpent: some View {
+//        Button {
+//            categoryBudget.intAmount = Int(-(category.getBalance(period: selectedPeriod.period)?.categorybalance ?? 00))
+//            saveBudget()
+//        } label: {
+//            Label("Spent", systemImage: "equal")
+//        }
+//        .tint(.blue)
+//    }
+    
+    var budgetToSpentIncludingFuture: some View {
         Button {
-            categoryBudget.intAmount = Int(-(category.getBalance(period: selectedPeriod.period)?.categorybalance ?? 00))
+            categoryBudget.intAmount = Int(-(category.getBalance(period: selectedPeriod.period)?.categorybalancetotal ?? 00))
             saveBudget()
         } label: {
             Label("Spent", systemImage: "equal")
+        }
+        .tint(.green)
+    }
+    
+    var budgetToLastMonth: some View {
+        Button {
+            categoryBudget.intAmount = category.getBudget(period: previousPeriod() ?? Period())
+            saveBudget()
+        } label: {
+            Label("Last month", systemImage: "arrow.left.circle.fill")
         }
         .tint(.blue)
     }
@@ -143,6 +181,30 @@ struct CategoryView: View {
         PersistenceController.shared.save() // save the changes
         
         (periodBalances.incomeBudget, periodBalances.expensesBudget) = selectedPeriod.period.calcBudgets() // calculate the period budget balances and save them in the environment object
+    }
+    
+    private func previousPeriod() -> Period? {
+        var year = Calendar.current.dateComponents([.year], from: selectedPeriod.period.startdate ?? Date()).year ?? 1900
+        var month = Calendar.current.dateComponents([.month], from: selectedPeriod.period.startdate ?? Date()).month ?? 1
+        
+        // Decrement the month, or the year and the month:
+        if(month == 1) {
+            year -= 1
+            month = 12
+        }
+        else {
+            month -= 1
+        }
+        
+        for periodFound in periods {
+            if(periodFound.year == year) {
+                if(periodFound.month == month) {
+                    return periodFound // return the period that was found
+                }
+            }
+        }
+        
+        return nil // if no previous period is found, return nil
     }
 }
 

@@ -89,7 +89,8 @@ struct CategoryListView: View {
                             for category in categories {
                                 if category.getBalance(period: selectedPeriod.period) == nil {
                                     let categorybalance = Balance(context: viewContext)
-                                    categorybalance.populate(type: "categorybalance", amount: category.calcBalance(period: selectedPeriod.period) , period: selectedPeriod.period, account: nil, category: category)
+                                    categorybalance.populate(type: "categorybalance", amount: category.calcBalance(period: selectedPeriod.period).0 , period: selectedPeriod.period, account: nil, category: category)
+                                    categorybalance.populate(type: "categorybalancetotal", amount: category.calcBalance(period: selectedPeriod.period).1 , period: selectedPeriod.period, account: nil, category: category)
                                 }
                             }
                             

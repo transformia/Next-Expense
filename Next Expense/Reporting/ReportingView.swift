@@ -5,6 +5,8 @@
 //  Created by Michael Frisk on 2022-10-14.
 //
 
+
+/*
 import SwiftUI
 
 struct ReportingView: View {
@@ -77,13 +79,13 @@ struct ReportingView: View {
                         Text("Actual")
                         
                         Text(periodBalances.incomeActual / 100, format: .currency(code: "EUR"))
-                            .onAppear {
-                                (periodBalances.incomeActual, periodBalances.expensesActual) = selectedPeriod.period.calcBalances()
-                            }
-                            .onChange(of: selectedPeriod.period) { _ in
-                                // Calculate the period balances - done in MiniReportingView and AddTransactionView:
-                                (periodBalances.incomeActual, periodBalances.expensesActual) = selectedPeriod.period.calcBalances()
-                            }
+//                            .onAppear {
+//                                (periodBalances.incomeActual, periodBalances.expensesActual) = selectedPeriod.period.calcBalances()
+//                            }
+//                            .onChange(of: selectedPeriod.period) { _ in
+//                                // Calculate the period balances - done in MiniReportingView and AddTransactionView:
+//                                (periodBalances.incomeActual, periodBalances.expensesActual) = selectedPeriod.period.calcBalances()
+//                            }
                         
                         Text(periodBalances.expensesActual / 100, format: .currency(code: "EUR"))
                         
@@ -100,6 +102,7 @@ struct ReportingView: View {
     //                        .onAppear { // not needed, because the period always changes when the view appears?
     //                            periodBalances.totalBalance = totalBalance(periodStartDate: selectedPeriod.periodStartDate)
     //                        }
+                        /*
                             .onChange(of: selectedPeriod.period) { _ in
     //                            periodBalances.totalBalance = totalBalance(periodStartDate: selectedPeriod.periodStartDate)
                                 
@@ -119,20 +122,21 @@ struct ReportingView: View {
                                     consideredDate = Calendar.current.startOfDay(for: Calendar.current.date(from: components) ?? Date())
                                 }
                                 
-                                print("Calculating total balance as of \(consideredDate)")
-                                for account in accounts {
-                                    if account.type == "Budget" { // ignore external accounts
-                                        if account.currency == defaultCurrency { // for accounts in the default currency
-                                            periodBalances.totalBalance += Double(account.calcBalance(toDate: consideredDate))
-                                        }
-                                        else { // for accounts in a different currency, add the amount converted to the default currency using the selected period's exchange rate, if there is one, otherwise add 0
-                                            if let fxRate = selectedPeriod.period.getFxRate(currency1: defaultCurrency, currency2: account.currency ?? "") {
-                                                periodBalances.totalBalance += Double(account.calcBalance(toDate: consideredDate)) / fxRate * 100.0
-                                            }
-                                        }
-                                    }
-                                }
+//                                print("Calculating total balance as of \(consideredDate)")
+//                                for account in accounts {
+//                                    if account.type == "Budget" { // ignore external accounts
+//                                        if account.currency == defaultCurrency { // for accounts in the default currency
+//                                            periodBalances.totalBalance += Double(account.calcBalance(toDate: consideredDate))
+//                                        }
+//                                        else { // for accounts in a different currency, add the amount converted to the default currency using the selected period's exchange rate, if there is one, otherwise add 0
+//                                            if let fxRate = selectedPeriod.period.getFxRate(currency1: defaultCurrency, currency2: account.currency ?? "") {
+//                                                periodBalances.totalBalance += Double(account.calcBalance(toDate: consideredDate)) / fxRate * 100.0
+//                                            }
+//                                        }
+//                                    }
+//                                }
                             }
+                        */
                     }
                     HStack {
                         Text("Budget available")
@@ -246,3 +250,6 @@ struct ReportingView: View {
 //        ReportingView()
 //    }
 //}
+
+
+*/

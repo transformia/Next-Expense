@@ -17,13 +17,8 @@ struct PeriodView: View {
         HStack {
             Text(period.monthString ?? "None")
             Text(yearFormatter.string(from: period.year as NSNumber) ?? "None")
-            Text("\(transactionCount)")
-                .onAppear {
-                    transactionCount = period.countTransactions()
-                }
-//            Image(systemName: "gear")
-//                .onTapGesture {
-//                    print(period.countTransactions())
+//            Text("\(transactionCount)")
+//                .onAppear {
 //                    transactionCount = period.countTransactions()
 //                }
         }

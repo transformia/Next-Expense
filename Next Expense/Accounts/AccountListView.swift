@@ -52,16 +52,13 @@ struct AccountListView: View {
                             Text("Budget")
                                 .font(.headline)
                             Spacer()
-                            Text(periodBalances.totalBalanceBudget / 100, format: .currency(code: defaultCurrency))
+                            Text(periodBalances.totalBalanceBudget, format: .currency(code: defaultCurrency))
                                 .font(.callout)
                         }
                         .onTapGesture {
                             withAnimation {
                                 showBudgetAccounts.toggle()
                             }
-                        }
-                        .onAppear {
-                            updateAccountTotals()
                         }
                         .onChange(of: periodBalances.expensesActual) { _ in
                             updateAccountTotals()
@@ -90,7 +87,7 @@ struct AccountListView: View {
                             Text("External")
                                 .font(.headline)
                             Spacer()
-                            Text(periodBalances.totalBalanceExternal / 100, format: .currency(code: defaultCurrency))
+                            Text(periodBalances.totalBalanceExternal, format: .currency(code: defaultCurrency))
                                 .font(.callout)
                         }
                         .onTapGesture {
@@ -116,7 +113,7 @@ struct AccountListView: View {
                             Text("Total balance")
                                 .font(.headline)
                             Spacer()
-                            Text(periodBalances.totalBalance / 100, format: .currency(code: defaultCurrency))
+                            Text(periodBalances.totalBalance, format: .currency(code: defaultCurrency))
                                 .font(.callout)
                         }
                         
@@ -127,12 +124,9 @@ struct AccountListView: View {
                         AddAccountView()
                     }
                     .sheet(isPresented: $addTransactionView) {
-                        AddTransactionView(payee: nil, account: accounts[0], category: categories[0])
+                        TransactionDetailView(transaction: nil, payee: nil, account: nil, category: nil)
                     }
                     .toolbar {
-                        ToolbarItem(placement: .navigationBarTrailing) {
-                            
-                        }
                         ToolbarItem(placement: .navigationBarTrailing) {
                             HStack {
                                 Button {
@@ -147,63 +141,33 @@ struct AccountListView: View {
                     }
                     
                     Button {
-                        if(categories.count > 0 && accounts.count > 0) {
+//                        if(categories.count > 0 && accounts.count > 0) {
                             addTransactionView.toggle() // show the view where I can add a new element
-                        }
-                        else {
-                            print("You need to create at least one account and one category before you can create a transaction")
-                        }
+//                        }
+//                        else {
+//                            print("You need to create at least one account and one category before you can create a transaction")
+//                        }
                     } label: {
                         Image(systemName: "plus")
                             .resizable()
-                            .frame(width: 18, height: 18)
+                            .frame(width: 24, height: 24)
                             .foregroundColor(.white)
-                            .padding(6)
+                            .padding(8)
                             .background(.green)
                             .clipShape(Circle())
                     }
                     .padding(.bottom, 20.0)
+                }
+                .onAppear {
+                    updateAccountTotals()
                 }
                 .navigationTitle("Accounts")
                 .navigationBarTitleDisplayMode(.inline)
             }
             
             
-            if(periodBalances.showBalanceAnimation) { // show the update of the category balance for x seconds
-                if !periodBalances.balanceAfter { // showing the balance before the transaction
-                    HStack {
-                        Text(periodBalances.category.name ?? "")
-                        Text(periodBalances.remainingBudgetBefore / 100, format: .currency(code: "EUR"))
-                    }
-                    .padding()
-                    .foregroundColor(periodBalances.remainingBudgetBefore > 0 ? .black : .white)
-                    .bold()
-                    .background(periodBalances.remainingBudgetBefore > 0 ? .green : .red)
-                    .clipShape(Capsule())
-                    .onAppear {
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 1.50) { // make it change after x seconds
-                            periodBalances.balanceAfter = true
-                        }
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 3.00) { // make it disappear after x seconds
-                            periodBalances.showBalanceAnimation = false
-                            periodBalances.balanceAfter = false
-                        }
-                    }
-                }
-                
-                else { // showing the balance after the transaction
-                    HStack {
-                        Text(periodBalances.category.name ?? "")
-//                        Text(periodBalances.category.calcRemainingBudget(period: selectedPeriod.period) / 100, format: .currency(code: "EUR"))
-                        Text(periodBalances.remainingBudgetAfter / 100, format: .currency(code: "EUR"))
-                    }
-                    .padding()
-                    .foregroundColor(periodBalances.remainingBudgetAfter > 0 ? .black : .white)
-                    .bold()
-                    .background(periodBalances.remainingBudgetAfter > 0 ? .green : .red)
-                    .clipShape(Capsule())
-                }
-            }
+            // Show the balance before and after the transaction:
+            CategoryBalanceBubble()
             
             
         } // end of ZStack
@@ -220,11 +184,13 @@ struct AccountListView: View {
         
         for account in accounts {
             if account.currency == defaultCurrency { // for accounts in the default currency
-                amount = account.getBalance(period: period)?.accountbalance ?? 0.0
+                amount = account.balance
+//                amount = account.getBalance(period: period)?.accountbalance ?? 0.0
             }
             else { // for accounts in a different currency, add the amount converted to the default currency using the selected period's exchange rate, if there is one, otherwise add 0
                 if let fxRate = period.getFxRate(currency1: defaultCurrency, currency2: account.currency ?? "") {
-                    amount = (account.getBalance(period: period)?.accountbalance ?? 0.0) / fxRate * 100.0
+                    amount = account.balance / fxRate * 100.0
+//                    amount = (account.getBalance(period: period)?.accountbalance ?? 0.0) / fxRate * 100.0
                 }
             }
             

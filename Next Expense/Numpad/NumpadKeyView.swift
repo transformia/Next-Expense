@@ -9,7 +9,7 @@ import SwiftUI
 
 struct NumpadKeyView: View {
 
-    @ObservedObject var amount: AddTransactionView.Amount // the amount being edited
+    @ObservedObject var amount: TransactionDetailView.Amount // the amount being edited
     
     let key: Int
     let specialKey: String
@@ -33,25 +33,49 @@ struct NumpadKeyView: View {
             let impactMed = UIImpactFeedbackGenerator(style: .medium) // haptic feedback
             impactMed.impactOccurred() // haptic feedback
             
-            switch(specialKey) {
-            case "":
-                if(amount.intAmount < 100000000000) { // stop accepting new digits when the amount is above one billion
-                    amount.intAmount = amount.intAmount * 10 + Int(key)
+            if amount.editingAmountTo {
+                switch(specialKey) {
+                case "":
+                    if(amount.intAmountTo < 100000000000) { // stop accepting new digits when the amount is above one billion
+                        amount.intAmountTo = amount.intAmountTo * 10 + Int(key)
+                    }
+                case "Backspace":
+                    amount.intAmountTo = amount.intAmountTo / 10
+                case "Clear":
+                    amount.intAmountTo = 0
+                case "Done":
+                    amount.showNumpad = false
+                case "-":
+                    print("Minus")
+                case "+":
+                    print("Plus")
+                case "=":
+                    print("Equal")
+                default:
+                    print("Undefined")
                 }
-            case "Backspace":
-                amount.intAmount = amount.intAmount / 10
-            case "Clear":
-                amount.intAmount = 0
-            case "Done":
-                amount.showNumpad = false
-            case "-":
-                print("Minus")
-            case "+":
-                print("Plus")
-            case "=":
-                print("Equal")
-            default:
-                print("Undefined")
+            }
+            else {
+                switch(specialKey) {
+                case "":
+                    if(amount.intAmount < 100000000000) { // stop accepting new digits when the amount is above one billion
+                        amount.intAmount = amount.intAmount * 10 + Int(key)
+                    }
+                case "Backspace":
+                    amount.intAmount = amount.intAmount / 10
+                case "Clear":
+                    amount.intAmount = 0
+                case "Done":
+                    amount.showNumpad = false
+                case "-":
+                    print("Minus")
+                case "+":
+                    print("Plus")
+                case "=":
+                    print("Equal")
+                default:
+                    print("Undefined")
+                }
             }
         }) {
             switch(specialKey) {

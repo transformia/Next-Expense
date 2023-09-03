@@ -1,27 +1,16 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="21513" systemVersion="22C65" minimumToolsVersion="Automatic" sourceLanguage="Swift" usedWithCloudKit="YES" userDefinedModelVersionIdentifier="">
+<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="21754" systemVersion="22F82" minimumToolsVersion="Automatic" sourceLanguage="Swift" usedWithCloudKit="YES" userDefinedModelVersionIdentifier="">
     <entity name="Account" representedClassName="Account" syncable="YES" codeGenerationType="class">
+        <attribute name="balance" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
         <attribute name="currency" optional="YES" attributeType="String"/>
         <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="name" optional="YES" attributeType="String"/>
         <attribute name="order" optional="YES" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="tinkid" optional="YES" attributeType="String"/>
         <attribute name="type" optional="YES" attributeType="String"/>
-        <relationship name="balances" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Balance" inverseName="account" inverseEntity="Balance"/>
         <relationship name="payees" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Payee" inverseName="account" inverseEntity="Payee"/>
         <relationship name="transactions" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Transaction" inverseName="account" inverseEntity="Transaction"/>
         <relationship name="transfertransactions" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Transaction" inverseName="toaccount" inverseEntity="Transaction"/>
-    </entity>
-    <entity name="Balance" representedClassName="Balance" syncable="YES" codeGenerationType="class">
-        <attribute name="accountbalance" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
-        <attribute name="categorybalance" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
-        <attribute name="categorybalancetotal" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
-        <attribute name="expensesactual" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
-        <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
-        <attribute name="incomeactual" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
-        <attribute name="modifieddate" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
-        <relationship name="account" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Account" inverseName="balances" inverseEntity="Account"/>
-        <relationship name="category" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Category" inverseName="balances" inverseEntity="Category"/>
-        <relationship name="period" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Period" inverseName="balances" inverseEntity="Period"/>
     </entity>
     <entity name="Budget" representedClassName="Budget" syncable="YES" codeGenerationType="class">
         <attribute name="amount" optional="YES" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
@@ -31,11 +20,14 @@
         <relationship name="period" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Period" inverseName="budgets" inverseEntity="Period"/>
     </entity>
     <entity name="Category" representedClassName="Category" syncable="YES" codeGenerationType="class">
+        <attribute name="balance" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="balanceperiod" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="budget" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
         <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="name" optional="YES" attributeType="String"/>
         <attribute name="order" optional="YES" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="remainingbudget" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
         <attribute name="type" optional="YES" attributeType="String"/>
-        <relationship name="balances" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Balance" inverseName="category" inverseEntity="Balance"/>
         <relationship name="budgets" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Budget" inverseName="category" inverseEntity="Budget"/>
         <relationship name="categorygroup" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="CategoryGroup" inverseName="categories" inverseEntity="CategoryGroup"/>
         <relationship name="payees" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Payee" inverseName="category" inverseEntity="Payee"/>
@@ -59,6 +51,7 @@
     <entity name="Payee" representedClassName="Payee" syncable="YES" codeGenerationType="class">
         <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="name" optional="YES" attributeType="String"/>
+        <attribute name="order" optional="YES" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
         <relationship name="account" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Account" inverseName="payees" inverseEntity="Account"/>
         <relationship name="category" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Category" inverseName="payees" inverseEntity="Category"/>
         <relationship name="debttranssactions" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Transaction" inverseName="debtor" inverseEntity="Transaction"/>
@@ -71,16 +64,17 @@
         <attribute name="showtransactions" optional="YES" attributeType="Boolean" defaultValueString="YES" usesScalarValueType="YES"/>
         <attribute name="startdate" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="year" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
-        <relationship name="balances" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Balance" inverseName="period" inverseEntity="Balance"/>
         <relationship name="budgets" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Budget" inverseName="period" inverseEntity="Budget"/>
         <relationship name="fxrates" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="FxRate" inverseName="period" inverseEntity="FxRate"/>
         <relationship name="transactions" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Transaction" inverseName="period" inverseEntity="Transaction"/>
     </entity>
     <entity name="Transaction" representedClassName="Transaction" syncable="YES" codeGenerationType="class">
         <attribute name="amount" optional="YES" attributeType="Integer 64" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="amountto" optional="YES" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="currency" optional="YES" attributeType="String"/>
         <attribute name="date" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="expense" optional="YES" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
+        <attribute name="expensesettled" optional="YES" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
         <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="income" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
         <attribute name="memo" optional="YES" attributeType="String"/>

@@ -38,6 +38,11 @@ struct TransactionView: View {
                             .font(.callout)
                     }
                     Spacer()
+                    if transaction.expense { // if this is an expense transaction, show who owes it
+                        Text("Debtor: \(transaction.debtor?.name ?? "")")
+                            .font(.caption)
+                            .foregroundColor(.blue)
+                    }
                 }
                 
                 HStack {
@@ -77,9 +82,17 @@ struct TransactionView: View {
                         .foregroundColor(transaction.income || (account == nil && transaction.account?.type == "External" && transaction.toaccount?.type == "Budget") ? .green : .primary) // color the amount in green if it is an income, or if I am viewing a transfer from an external account to a budget account, and am viewing it from the transaction list (i.e. account = nil)
                 }
                 else if (transaction.transfer && transaction.toaccount == account) { // from the account receiving a transfer
-                    Text(Double(transaction.amount) / 100, format: .currency(code: transaction.currency ?? "EUR"))
-                        .font(.callout)
-                        .foregroundColor(.green)
+                    // If the currency of the to account is different from the currency of the transaction, use the amountTo instead of the amount:
+                    if transaction.currency != transaction.toaccount?.currency {
+                        Text(Double(transaction.amountto) / 100, format: .currency(code: transaction.toaccount?.currency ?? "EUR"))
+                            .font(.callout)
+                            .foregroundColor(.green)
+                    }
+                    else {
+                        Text(Double(transaction.amount) / 100, format: .currency(code: transaction.currency ?? "EUR"))
+                            .font(.callout)
+                            .foregroundColor(.green)
+                    }
                     //                                                    .foregroundColor(!transaction.income || (transaction.account?.type == "External" && transaction.toaccount?.type == "Budget") ? .green : .primary) // reversed for the account that receives the transfer
                 }
                 
@@ -91,12 +104,14 @@ struct TransactionView: View {
                 
             }
         }
+        .contentShape(Rectangle()) // make the whole HStack tappable
         .foregroundColor(Calendar.current.startOfDay(for: transaction.date ?? Date()) > Date() ? .gray : nil)
         .onTapGesture {
             showingTransactionDetailView.toggle()
         }
         .sheet(isPresented: $showingTransactionDetailView) {
-            TransactionDetailView(transaction: transaction)
+//            TransactionDetailView(transaction: transaction)
+            TransactionDetailView(transaction: transaction, payee: nil, account: nil, category: nil)
         }
     }
     

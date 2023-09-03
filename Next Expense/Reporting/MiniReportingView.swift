@@ -5,6 +5,8 @@
 //  Created by Michael Frisk on 2022-11-03.
 //
 
+
+/*
 import SwiftUI
 
 struct MiniReportingView: View {
@@ -195,3 +197,6 @@ struct MiniReportingView: View {
 //        MiniReportingView()
 //    }
 //}
+
+
+*/

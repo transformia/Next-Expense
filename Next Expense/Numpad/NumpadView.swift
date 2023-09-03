@@ -9,13 +9,19 @@ import SwiftUI
 
 struct NumpadView: View {
     
-    @ObservedObject var amount: AddTransactionView.Amount // the amount being edited
+    @ObservedObject var amount: TransactionDetailView.Amount // the amount being edited
     
     var body: some View {
         VStack {
             
-            Text(Double(amount.intAmount) / 100, format: .currency(code: "EUR")) // amount budgeted
-                .bold(true)
+            if amount.editingAmountTo {
+                Text(Double(amount.intAmountTo) / 100, format: .currency(code: amount.currency)) // amount edited
+                    .bold(true)
+            }
+            else {
+                Text(Double(amount.intAmount) / 100, format: .currency(code: amount.currency)) // amount edited
+                    .bold(true)
+            }
             
             VStack {
                 HStack {

@@ -171,7 +171,7 @@ struct CSVExportView: View {
     }
     
     private func getTransactions() -> String { // get all transactions and put them in the message field
-        var message = "\"Account\"\t\"Date\"\t\"Payee\"\t\"Category\"\t\"Memo\"\t\"Amount\"\t\"Currency\"\t\"Income\"\t\"Transfer\"\t\"ToAccount\"\t\"Expense\"\t\"Debtor\"\t\"Recurring\"\t\"Recurrence\""
+        var message = "\"Account\"\t\"Date\"\t\"Payee\"\t\"Category\"\t\"Memo\"\t\"Amount\"\t\"Currency\"\t\"Income\"\t\"Transfer\"\t\"ToAccount\"\t\"Expense\"\t\"ExpenseSettled\"\t\"Debtor\"\t\"Recurring\"\t\"Recurrence\""
         for transaction in transactions {
             message += "\n\"\(transaction.account?.name ?? "")\"\t"
             message += "\"\(transaction.date ?? Date())\"\t"
@@ -184,6 +184,7 @@ struct CSVExportView: View {
             message += "\"\(transaction.transfer)\"\t"
             message += "\"\(transaction.toaccount?.name ?? "")\"\t"
             message += "\"\(transaction.expense)\"\t"
+            message += "\"\(transaction.expensesettled)\"\t"
             message += "\"\(transaction.debtor?.name ?? "")\"\t"
             message += "\"\(transaction.recurring)\"\t"
             message += "\"\(transaction.recurrence ?? "Monthly")\""
@@ -195,7 +196,7 @@ struct CSVExportView: View {
         let transactions = message.components(separatedBy: .newlines) // split the message into an array containing each of its lines
 //        print(transactions)
         for i in 1 ... transactions.count - 1 {
-            guard transactions[i].components(separatedBy: "\t").count == 14 else {
+            guard transactions[i].components(separatedBy: "\t").count == 15 else {
                 print("Line \(i) contains \(transactions[i].components(separatedBy: "\t").count) field(s)")
                 print("Skipping line \(i)")
                 continue // skip this line
@@ -216,9 +217,10 @@ struct CSVExportView: View {
             let transfer = transactions[i].components(separatedBy: "\t")[8].trimmingCharacters(in: charsToBeDeleted) == "false" ? false : true
             let toAccountName = transactions[i].components(separatedBy: "\t")[9].trimmingCharacters(in: charsToBeDeleted)
             let expense = transactions[i].components(separatedBy: "\t")[10].trimmingCharacters(in: charsToBeDeleted) == "false" ? false : true
-            let debtorName = transactions[i].components(separatedBy: "\t")[11].trimmingCharacters(in: charsToBeDeleted)
-            let recurring = transactions[i].components(separatedBy: "\t")[12].trimmingCharacters(in: charsToBeDeleted) == "false" ? false : true
-            let recurrence = transactions[i].components(separatedBy: "\t")[13].trimmingCharacters(in: charsToBeDeleted)
+            let expenseSettled = transactions[i].components(separatedBy: "\t")[11].trimmingCharacters(in: charsToBeDeleted) == "false" ? false : true
+            let debtorName = transactions[i].components(separatedBy: "\t")[12].trimmingCharacters(in: charsToBeDeleted)
+            let recurring = transactions[i].components(separatedBy: "\t")[13].trimmingCharacters(in: charsToBeDeleted) == "false" ? false : true
+            let recurrence = transactions[i].components(separatedBy: "\t")[14].trimmingCharacters(in: charsToBeDeleted)
             
             let dateFormatter = DateFormatter()
             dateFormatter.dateFormat = "yyyy-MM-dd HH:mm:ss Z"
@@ -252,7 +254,7 @@ struct CSVExportView: View {
             let transaction = Transaction(context: viewContext)
             let period = getPeriod(date: date ?? Date())
                 
-            transaction.populate(account: account ?? Account(), date: date ?? Date(), period: period, payee: payee, category: category, memo: memo, amount: Int(amount) ?? 0, currency: currency, income: income, transfer: transfer, toAccount: toAccount, expense: expense, debtor: debtor, recurring: recurring, recurrence: recurrence)
+            transaction.populate(account: account ?? Account(), date: date ?? Date(), period: period, payee: payee, category: category, memo: memo, amount: Int(amount) ?? 0, amountTo: 0, currency: currency, income: income, transfer: transfer, toAccount: toAccount, expense: expense, expenseSettled: expenseSettled, debtor: debtor, recurring: recurring, recurrence: recurrence)
             
 //            transaction.id = UUID()
 //            transaction.timestamp = Date()

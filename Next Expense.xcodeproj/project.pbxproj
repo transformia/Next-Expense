@@ -21,7 +21,7 @@
 		4C3CDC9D29A8DDD00078D5C8 /* DebtorListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C3CDC9C29A8DDD00078D5C8 /* DebtorListView.swift */; };
 		4C3CDC9F29A973280078D5C8 /* DebtorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C3CDC9E29A973280078D5C8 /* DebtorView.swift */; };
 		4C3CDCA129A982330078D5C8 /* PeriodView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C3CDCA029A982330078D5C8 /* PeriodView.swift */; };
-		4C44A57D29B00AA600723F42 /* BalanceListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C44A57C29B00AA600723F42 /* BalanceListView.swift */; };
+		4C3E2F0B2A9F4FBA00D274A3 /* TinkAccountList.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C3E2F0A2A9F4FBA00D274A3 /* TinkAccountList.swift */; };
 		4C45070828F749A000D17558 /* Next_Expense_wOS.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = 4C45070628F749A000D17558 /* Next_Expense_wOS.xcdatamodeld */; };
 		4C45070928F74AD500D17558 /* Persistence.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C11C76528F73DA7002E4441 /* Persistence.swift */; };
 		4C51165A29B5000C0024BD1A /* PeriodTransactionsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C51165929B5000C0024BD1A /* PeriodTransactionsView.swift */; };
@@ -31,7 +31,10 @@
 		4C87060B28FD5405003CEAC0 /* AddCategoryToGroupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C87060A28FD5405003CEAC0 /* AddCategoryToGroupView.swift */; };
 		4C87060D28FD5587003CEAC0 /* CategoryGroupDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C87060C28FD5587003CEAC0 /* CategoryGroupDetailView.swift */; };
 		4C88A01128FF6DEF00C4584C /* BudgetListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C88A01028FF6DEE00C4584C /* BudgetListView.swift */; };
+		4C8931F52A2FC8AC008E704A /* CategoryReportingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C8931F42A2FC8AC008E704A /* CategoryReportingView.swift */; };
 		4C8CC6B5290771C60025F8D1 /* Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C8CC6B4290771C60025F8D1 /* Extensions.swift */; };
+		4C98CAFA2A1FC83000D881FB /* CategoryBalanceBubble.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C98CAF92A1FC83000D881FB /* CategoryBalanceBubble.swift */; };
+		4C98CAFC2A2093B300D881FB /* DebtorTransView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C98CAFB2A2093B300D881FB /* DebtorTransView.swift */; };
 		4CAD872E29769D7A00EA27B3 /* NumpadView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CAD872D29769D7A00EA27B3 /* NumpadView.swift */; };
 		4CAD873029769D8500EA27B3 /* NumpadKeyView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CAD872F29769D8500EA27B3 /* NumpadKeyView.swift */; };
 		4CB1C8FB29AE1E6600706336 /* BudgetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CB1C8FA29AE1E6500706336 /* BudgetView.swift */; };
@@ -47,9 +50,8 @@
 		4CDF62AA28DDF0F60047C765 /* AccountListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CDF62A928DDF0F60047C765 /* AccountListView.swift */; };
 		4CDF62AC28DDF1010047C765 /* AddAccountView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CDF62AB28DDF1010047C765 /* AddAccountView.swift */; };
 		4CDF62AE28DDF6FD0047C765 /* TransactionListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CDF62AD28DDF6FD0047C765 /* TransactionListView.swift */; };
-		4CDF62B028DDF7040047C765 /* AddTransactionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CDF62AF28DDF7040047C765 /* AddTransactionView.swift */; };
+		4CDF62B028DDF7040047C765 /* TransactionDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CDF62AF28DDF7040047C765 /* TransactionDetailView.swift */; };
 		4CDF62B228DE0EBD0047C765 /* AccountView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CDF62B128DE0EBD0047C765 /* AccountView.swift */; };
-		4CDF62B428DE1F960047C765 /* TransactionDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CDF62B328DE1F960047C765 /* TransactionDetailView.swift */; };
 		4CDF62B628DE2FAB0047C765 /* CategoryListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CDF62B528DE2FAB0047C765 /* CategoryListView.swift */; };
 		4CDF62B828DE30CE0047C765 /* CategoryDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CDF62B728DE30CE0047C765 /* CategoryDetailView.swift */; };
 		4CDF62BA28DE31300047C765 /* AddCategoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CDF62B928DE31300047C765 /* AddCategoryView.swift */; };
@@ -104,7 +106,7 @@
 		4C3CDC9C29A8DDD00078D5C8 /* DebtorListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DebtorListView.swift; sourceTree = "<group>"; };
 		4C3CDC9E29A973280078D5C8 /* DebtorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DebtorView.swift; sourceTree = "<group>"; };
 		4C3CDCA029A982330078D5C8 /* PeriodView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PeriodView.swift; sourceTree = "<group>"; };
-		4C44A57C29B00AA600723F42 /* BalanceListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BalanceListView.swift; sourceTree = "<group>"; };
+		4C3E2F0A2A9F4FBA00D274A3 /* TinkAccountList.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TinkAccountList.swift; sourceTree = "<group>"; };
 		4C45070028F744CE00D17558 /* Next Expense.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "Next Expense.entitlements"; sourceTree = "<group>"; };
 		4C45070128F7461800D17558 /* Next Expense wOS Watch App.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "Next Expense wOS Watch App.entitlements"; sourceTree = "<group>"; };
 		4C45070228F7476D00D17558 /* Next-Expense-wOS-Watch-App-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "Next-Expense-wOS-Watch-App-Info.plist"; sourceTree = SOURCE_ROOT; };
@@ -116,7 +118,10 @@
 		4C87060A28FD5405003CEAC0 /* AddCategoryToGroupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddCategoryToGroupView.swift; sourceTree = "<group>"; };
 		4C87060C28FD5587003CEAC0 /* CategoryGroupDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CategoryGroupDetailView.swift; sourceTree = "<group>"; };
 		4C88A01028FF6DEE00C4584C /* BudgetListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BudgetListView.swift; sourceTree = "<group>"; };
+		4C8931F42A2FC8AC008E704A /* CategoryReportingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CategoryReportingView.swift; sourceTree = "<group>"; };
 		4C8CC6B4290771C60025F8D1 /* Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Extensions.swift; sourceTree = "<group>"; };
+		4C98CAF92A1FC83000D881FB /* CategoryBalanceBubble.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CategoryBalanceBubble.swift; sourceTree = "<group>"; };
+		4C98CAFB2A2093B300D881FB /* DebtorTransView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DebtorTransView.swift; sourceTree = "<group>"; };
 		4CAD872D29769D7A00EA27B3 /* NumpadView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NumpadView.swift; sourceTree = "<group>"; };
 		4CAD872F29769D8500EA27B3 /* NumpadKeyView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NumpadKeyView.swift; sourceTree = "<group>"; };
 		4CB1C8FA29AE1E6500706336 /* BudgetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BudgetView.swift; sourceTree = "<group>"; };
@@ -134,9 +139,8 @@
 		4CDF62A928DDF0F60047C765 /* AccountListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountListView.swift; sourceTree = "<group>"; };
 		4CDF62AB28DDF1010047C765 /* AddAccountView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddAccountView.swift; sourceTree = "<group>"; };
 		4CDF62AD28DDF6FD0047C765 /* TransactionListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransactionListView.swift; sourceTree = "<group>"; };
-		4CDF62AF28DDF7040047C765 /* AddTransactionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddTransactionView.swift; sourceTree = "<group>"; };
+		4CDF62AF28DDF7040047C765 /* TransactionDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransactionDetailView.swift; sourceTree = "<group>"; };
 		4CDF62B128DE0EBD0047C765 /* AccountView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountView.swift; sourceTree = "<group>"; };
-		4CDF62B328DE1F960047C765 /* TransactionDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransactionDetailView.swift; sourceTree = "<group>"; };
 		4CDF62B528DE2FAB0047C765 /* CategoryListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CategoryListView.swift; sourceTree = "<group>"; };
 		4CDF62B728DE30CE0047C765 /* CategoryDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CategoryDetailView.swift; sourceTree = "<group>"; };
 		4CDF62B928DE31300047C765 /* AddCategoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddCategoryView.swift; sourceTree = "<group>"; };
@@ -146,6 +150,7 @@
 		4CEDD44F28F9A2960041BEEA /* ReportingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReportingView.swift; sourceTree = "<group>"; };
 		4CEDD45128F9A3380041BEEA /* CategoryGroupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CategoryGroupView.swift; sourceTree = "<group>"; };
 		4CEDD45328F9A4230041BEEA /* AddCategoryGroupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddCategoryGroupView.swift; sourceTree = "<group>"; };
+		4CFF09CB2A7264DA006F4EF4 /* Next-Expense-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "Next-Expense-Info.plist"; sourceTree = SOURCE_ROOT; };
 		4CFF513B29673A0800F643D6 /* PayeeListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PayeeListView.swift; sourceTree = "<group>"; };
 		4CFF513D29673A9F00F643D6 /* PayeeDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PayeeDetailView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -204,6 +209,7 @@
 				4C87060C28FD5587003CEAC0 /* CategoryGroupDetailView.swift */,
 				4CEDD45328F9A4230041BEEA /* AddCategoryGroupView.swift */,
 				4C87060A28FD5405003CEAC0 /* AddCategoryToGroupView.swift */,
+				4C98CAF92A1FC83000D881FB /* CategoryBalanceBubble.swift */,
 			);
 			path = Categories;
 			sourceTree = "<group>";
@@ -212,10 +218,9 @@
 			isa = PBXGroup;
 			children = (
 				4CDF62AD28DDF6FD0047C765 /* TransactionListView.swift */,
-				4C51165929B5000C0024BD1A /* PeriodTransactionsView.swift */,
 				4CB1C8FC29AFB3BE00706336 /* TransactionView.swift */,
-				4CDF62B328DE1F960047C765 /* TransactionDetailView.swift */,
-				4CDF62AF28DDF7040047C765 /* AddTransactionView.swift */,
+				4C51165929B5000C0024BD1A /* PeriodTransactionsView.swift */,
+				4CDF62AF28DDF7040047C765 /* TransactionDetailView.swift */,
 			);
 			path = Transactions;
 			sourceTree = "<group>";
@@ -251,6 +256,7 @@
 			children = (
 				4C3CDC9C29A8DDD00078D5C8 /* DebtorListView.swift */,
 				4C3CDC9E29A973280078D5C8 /* DebtorView.swift */,
+				4C98CAFB2A2093B300D881FB /* DebtorTransView.swift */,
 			);
 			path = Expenses;
 			sourceTree = "<group>";
@@ -268,7 +274,6 @@
 			children = (
 				4C1B729F29A7B69F000E7D68 /* SettingsView.swift */,
 				4C1465AF2977E6DE00D641F6 /* AdminView.swift */,
-				4C44A57C29B00AA600723F42 /* BalanceListView.swift */,
 				4C5D481F28FF550E0042693C /* PeriodListView.swift */,
 				4C3CDCA029A982330078D5C8 /* PeriodView.swift */,
 				4C88A01028FF6DEE00C4584C /* BudgetListView.swift */,
@@ -297,6 +302,14 @@
 			path = Numpad;
 			sourceTree = "<group>";
 		};
+		4CC3A0FF2A9D249E00EC5C50 /* Tink integration */ = {
+			isa = PBXGroup;
+			children = (
+				4C3E2F0A2A9F4FBA00D274A3 /* TinkAccountList.swift */,
+			);
+			path = "Tink integration";
+			sourceTree = "<group>";
+		};
 		4CDF628528DDEF1E0047C765 = {
 			isa = PBXGroup;
 			children = (
@@ -319,6 +332,7 @@
 		4CDF629028DDEF1E0047C765 /* Next Expense */ = {
 			isa = PBXGroup;
 			children = (
+				4CFF09CB2A7264DA006F4EF4 /* Next-Expense-Info.plist */,
 				4C45070028F744CE00D17558 /* Next Expense.entitlements */,
 				4CDF62A528DDEF4C0047C765 /* Core data */,
 				4CDF629128DDEF1E0047C765 /* Next_ExpenseApp.swift */,
@@ -330,6 +344,7 @@
 				4C11C75C28F6B2FA002E4441 /* Transactions */,
 				4C3CDC9B29A8D67C0078D5C8 /* Expenses */,
 				4CEDD44E28F9A2540041BEEA /* Reporting */,
+				4CC3A0FF2A9D249E00EC5C50 /* Tink integration */,
 				4C5D481E28FF54FD0042693C /* Administration */,
 				4C44A57E29B3644000723F42 /* Unused */,
 				4CDF629528DDEF200047C765 /* Assets.xcassets */,
@@ -371,6 +386,7 @@
 		4CEDD44E28F9A2540041BEEA /* Reporting */ = {
 			isa = PBXGroup;
 			children = (
+				4C8931F42A2FC8AC008E704A /* CategoryReportingView.swift */,
 				4C58617629141FEA009FD743 /* MiniReportingView.swift */,
 				4CEDD44F28F9A2960041BEEA /* ReportingView.swift */,
 			);
@@ -436,6 +452,8 @@
 			dependencies = (
 			);
 			name = "Next Expense";
+			packageProductDependencies = (
+			);
 			productName = "Next Expense";
 			productReference = 4CDF628E28DDEF1E0047C765 /* Next Expense.app */;
 			productType = "com.apple.product-type.application";
@@ -470,6 +488,8 @@
 				Base,
 			);
 			mainGroup = 4CDF628528DDEF1E0047C765;
+			packageReferences = (
+			);
 			productRefGroup = 4CDF628F28DDEF1E0047C765 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -536,10 +556,13 @@
 				4CDF629B28DDEF200047C765 /* Persistence.swift in Sources */,
 				4CDF62B628DE2FAB0047C765 /* CategoryListView.swift in Sources */,
 				4CB1C8FD29AFB3BE00706336 /* TransactionView.swift in Sources */,
+				4C98CAFA2A1FC83000D881FB /* CategoryBalanceBubble.swift in Sources */,
+				4C3E2F0B2A9F4FBA00D274A3 /* TinkAccountList.swift in Sources */,
 				4CEDD45028F9A2960041BEEA /* ReportingView.swift in Sources */,
 				4C586175291414A3009FD743 /* CategoryGroupListView.swift in Sources */,
 				4CDF62BE28DE39D10047C765 /* AccountDetailView.swift in Sources */,
 				4CE5B6E12916B03900E87B0D /* CSVExportView.swift in Sources */,
+				4C98CAFC2A2093B300D881FB /* DebtorTransView.swift in Sources */,
 				4CB1C8FB29AE1E6600706336 /* BudgetView.swift in Sources */,
 				4CDF62AC28DDF1010047C765 /* AddAccountView.swift in Sources */,
 				4CDF629428DDEF1E0047C765 /* ContentView.swift in Sources */,
@@ -547,14 +570,14 @@
 				4CEDD45428F9A4230041BEEA /* AddCategoryGroupView.swift in Sources */,
 				4CDF62BA28DE31300047C765 /* AddCategoryView.swift in Sources */,
 				4CDF629228DDEF1E0047C765 /* Next_ExpenseApp.swift in Sources */,
-				4CDF62B028DDF7040047C765 /* AddTransactionView.swift in Sources */,
+				4CDF62B028DDF7040047C765 /* TransactionDetailView.swift in Sources */,
 				4CDF62BC28DE35740047C765 /* CategoryView.swift in Sources */,
 				4CC1DA6D29005C97000DCA2F /* NumpadView.swift in Sources */,
 				4C1465B02977E6DE00D641F6 /* AdminView.swift in Sources */,
 				4CDF62B228DE0EBD0047C765 /* AccountView.swift in Sources */,
 				4C51165A29B5000C0024BD1A /* PeriodTransactionsView.swift in Sources */,
+				4C8931F52A2FC8AC008E704A /* CategoryReportingView.swift in Sources */,
 				4CDF62AE28DDF6FD0047C765 /* TransactionListView.swift in Sources */,
-				4CDF62B428DE1F960047C765 /* TransactionDetailView.swift in Sources */,
 				4C88A01128FF6DEF00C4584C /* BudgetListView.swift in Sources */,
 				4C5D482028FF550E0042693C /* PeriodListView.swift in Sources */,
 				4CEDD45228F9A3380041BEEA /* CategoryGroupView.swift in Sources */,
@@ -562,7 +585,6 @@
 				4C1B72A229A7E4D9000E7D68 /* FxRateView.swift in Sources */,
 				4C8CC6B5290771C60025F8D1 /* Extensions.swift in Sources */,
 				4C3CDC9D29A8DDD00078D5C8 /* DebtorListView.swift in Sources */,
-				4C44A57D29B00AA600723F42 /* BalanceListView.swift in Sources */,
 				4C1B72A029A7B69F000E7D68 /* SettingsView.swift in Sources */,
 				4CFF513E29673A9F00F643D6 /* PayeeDetailView.swift in Sources */,
 				4CDF629E28DDEF200047C765 /* Next_Expense.xcdatamodeld in Sources */,
@@ -804,6 +826,7 @@
 				DEVELOPMENT_TEAM = VWCW8YMM6Y;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "Next-Expense-Info.plist";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -834,6 +857,7 @@
 				DEVELOPMENT_TEAM = VWCW8YMM6Y;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "Next-Expense-Info.plist";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;

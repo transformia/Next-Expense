@@ -25,6 +25,8 @@ struct AccountDetailView: View {
         animation: .default)
     private var periods: FetchedResults<Period> // to determine the period of the reconciliation transaction
     
+    @EnvironmentObject var selectedPeriod: ContentView.SelectedPeriod // get the selected period from the environment
+    
     @Environment(\.dismiss) private var dismiss // used for dismissing this view
     
     let account: Account // element to display
@@ -38,7 +40,7 @@ struct AccountDetailView: View {
     let types = ["Budget", "External"]
     
 //    @State private var balance = 0.0
-    @StateObject var accountBalance = AddTransactionView.Amount()
+    @StateObject var accountBalance = TransactionDetailView.Amount()
     
     // Category selected for the reconciliation difference:
     @State private var selectedCategory: Category?
@@ -46,9 +48,19 @@ struct AccountDetailView: View {
     @State private var showingDeleteAlert = false
 //    @State private var showingReconciliationAlert = false
     
+    
     @EnvironmentObject var periodBalances: ContentView.PeriodBalances // get the period balances from the environment
     
     @FocusState var isFocused: Bool // determines whether the focus is on the text field or not
+    
+    @Environment(\.openURL) var openURL
+//    @State private var tinkCode = ""
+    @State private var tinkAccessToken = ""
+    @State private var tinkRefreshToken = ""
+    @State private var userAccessToken = ""
+    
+    @State private var accountInfo: [(String, String, String, Int)] = []
+    @State private var showAccountList = false
     
     var body: some View {
         VStack {
@@ -91,34 +103,146 @@ struct AccountDetailView: View {
             HStack {
                 Text("Balance")
                     .font(.headline)
-//                Text(Double(balance.intAmount) / 100, format: .currency(code: account.currency ?? "EUR"))
-                Text((account.getBalance(period: getPeriod(date: Date()))?.accountbalance ?? 0.0) / 100, format: .currency(code: account.currency ?? "EUR"))
+                Text(account.balance, format: .currency(code: account.currency ?? "EUR"))
                     .font(.headline)
                     .foregroundColor(.blue)
                     .onAppear {
-//                        balance.intAmount = Int(account.calcBalance(toDate: Date()))
-                        accountBalance.intAmount = Int(account.getBalance(period: getPeriod(date: Date()))?.accountbalance ?? 0.0) // set the reconciliation balance to the account's balance
+                        accountBalance.intAmount = Int(account.balance * 100) // set the reconciliation balance to the account's balance
                     }
                     .onTapGesture {
                         accountBalance.showNumpad.toggle()
                     }
-                    .onChange(of: account.getBalance(period: getPeriod(date: Date()))?.accountbalance) { _ in
-                        accountBalance.intAmount = Int(account.getBalance(period: getPeriod(date: Date()))?.accountbalance ?? 0.0)
+                    .onChange(of: account.balance) { _ in
+                        accountBalance.intAmount = Int(account.balance * 100)
                     } // when the account balance changes because a transaction has been modified, also update the reconciliation balance so that it doesn't think that there is suddenly a reconciliation difference
             }
-//            HStack {
-//                if showKeypad { // show the balance to reconcile to
-//                    Text("Reconciliation balance")
-//                        .font(.headline)
-//
-//                    Text(Double(balance.intAmount) / 100, format: .currency(code: account.currency ?? "EUR"))
-//                        .font(.headline)
-//                        .foregroundColor(.green)
-//                }
-//            }
             
-            if(Double(accountBalance.intAmount) != (account.getBalance(period: getPeriod(date: Date()))?.accountbalance ?? 0.0)) {
-//            if(balance.intAmount != Int(account.calcBalance(toDate: Date()))) {
+//            Text("Tink account id: " + (account.tinkid ?? ""))
+            
+            Button {
+                TinkService.shared.newUser() { success, tinkLinkURL in
+                    print("Tink Link generated:")
+                    print(tinkLinkURL ?? "")
+                }
+            } label: {
+                Label("Create user", systemImage: "key")
+            }
+            
+            Button {
+                TinkService.shared.giveAccess() { success, tinkLinkURL in
+                    if success {
+//                        print(tinkLinkURL ?? "")
+                        openURL(URL(string: tinkLinkURL!)!)
+                    }
+                    else {
+                        print("Tink link wan't generated")
+                    }
+                }
+            } label: {
+                Label("Grant user access", systemImage: "key")
+            }
+            .onOpenURL { incomingURL in
+                handleTinkLinkCallback(incomingURL: incomingURL)
+            }
+            
+            Button {
+                TinkService.shared.getUserAccessToken(tinkAccessToken: tinkAccessToken) { success, userAccessToken in
+                    
+                }
+            } label: {
+                Label("Get user access token", systemImage: "key")
+            }
+            
+            /*Group {
+                
+                Button {
+                    authorizeApp(scope: "user:create")
+                } label: {
+                    Label("Authorize app", systemImage: "key")
+                }
+                
+                Button {
+                    createUser()
+                } label: {
+                    Label("Create user", systemImage: "key")
+                }
+                
+                Button {
+                    authorizeApp(scope: "authorization:grant")
+                } label: {
+                    Label("Authorize app", systemImage: "key")
+                }
+                
+                Button {
+                    grantUserAccess()
+                } label: {
+                    Label("Grant user access", systemImage: "key")
+                }
+                .onOpenURL { incomingURL in
+                    handleTinkLinkCallback(incomingURL: incomingURL)
+                }
+                
+                Button {
+                    getUserAccessCode()
+                } label: {
+                    Label("Get user access code then tokens", systemImage: "key")
+                }
+                
+                Button {
+                    getAccountList()
+                } label: {
+                    Label("Link account", systemImage: "key")
+                }
+                .sheet(isPresented: $showAccountList) {
+                    TinkAccountList(account: account, accountInfo: accountInfo, balance: accountBalance)
+                }
+                
+                Button {
+                    getAccountBalance()
+                } label: {
+                    Label("Get account balance", systemImage: "key")
+                }
+            }*/
+            
+            /*Button {
+                openTinkLink()
+            } label: {
+                Label("Authenticate with Tink", systemImage: "key")
+            }
+            .onOpenURL { incomingURL in
+                handleTinkLinkCallback(incomingURL: incomingURL)
+            }
+            
+            
+//            Text("Tink code: \(tinkCode)")
+            
+            
+            Button {
+                getTinkAccessToken()
+            } label: {
+                Label("Exchange code for access token", systemImage: "key")
+            }
+                
+            
+            Button {
+                getAccountList()
+            } label: {
+                Label("Get account list", systemImage: "dollarsign")
+            }
+            .sheet(isPresented: $showAccountList) {
+                TinkAccountList(account: account, accountInfo: accountInfo, balance: accountBalance)
+            }
+            
+//            if account.tinkid != nil {
+//                Button {
+//                    getAccountBalance()
+//                } label: {
+//                    Label("Get balance", systemImage: "dollarsign")
+//                }
+//            }*/
+            
+            
+            if(Double(accountBalance.intAmount) / 100 != account.balance) {
                 HStack {
                     Text("Reconciliation balance")
                         .font(.headline)
@@ -129,7 +253,7 @@ struct AccountDetailView: View {
                 }
                 HStack {
                     Text("Difference: ")
-                    Text(((Double(accountBalance.intAmount) - (account.getBalance(period: getPeriod(date: Date()))?.accountbalance ?? 0.0)) / 100), format: .currency(code: account.currency ?? "EUR"))
+                    Text(((Double(accountBalance.intAmount) / 100 - account.balance)), format: .currency(code: account.currency ?? "EUR"))
                     Picker("Category", selection: $selectedCategory) {
                         ForEach(categories, id: \.self) { (category: Category) in
                             Text(category.name ?? "")
@@ -142,31 +266,14 @@ struct AccountDetailView: View {
                 }
                 HStack {
                     Button {
-                        print("Reconciling with a difference of \(( Double(accountBalance.intAmount) - Double(account.calcBalance(toDate: Date())) ) / 100)")
+                        print("Reconciling with a difference of \(( Double(accountBalance.intAmount) / 100 - account.balance ))")
                         let transaction = Transaction(context: viewContext)
-                        
-//                        transaction.id = UUID()
-//                        transaction.timestamp = Date()
-//                        transaction.date = Date()
-//                        transaction.period = getPeriod(date: Date())
-//                        //                    transaction.payee = selectedPayee
-//                        transaction.category = selectedCategory
-//                        transaction.amount = Int64(abs(accountBalance.intAmount - Int(account.calcBalance(toDate: Date())))) // save amount as an int, i.e. 2560 means 25,60€ for example
-//                        transaction.income = Double(accountBalance.intAmount) - account.calcBalance(toDate: Date()) > 0 ? true : false // save the direction of the transaction, true for an positive value, false for a negative one
-//                        transaction.transfer = false // save the information that this is not a transfer
-//                        print("Amount: \(transaction.amount)")
-//                        transaction.currency = account.currency
-//                        transaction.memo = "Reconciliation difference"
-//                        transaction.account = account
-                        
-                        transaction.populate(account: account, date: Date(), period: getPeriod(date: Date()), payee: nil, category: selectedCategory, memo: "Reconciliation difference", amount: Int(abs((Double(accountBalance.intAmount) - (account.getBalance(period: getPeriod(date: Date()))?.accountbalance ?? 0.0)))), currency: account.currency ?? "EUR", income: Double(accountBalance.intAmount) - (account.getBalance(period: getPeriod(date: Date()))?.accountbalance ?? 0.0) > 0 ? true : false, transfer: false, toAccount: nil, expense: false, debtor: nil, recurring: false, recurrence: "")
+                            
+                        transaction.populate(account: account, date: Date(), period: getPeriod(date: Date()), payee: nil, category: selectedCategory, memo: "Reconciliation difference", amount: Int(abs((Double(accountBalance.intAmount) - account.balance * 100))), amountTo: 0, currency: account.currency ?? "EUR", income: Double(accountBalance.intAmount) - account.balance * 100 > 0 ? true : false, transfer: false, toAccount: nil, expense: false, expenseSettled: false, debtor: nil, recurring: false, recurrence: "")
                         
                         // Update the category, account(s) and period balances based on the new transaction:
-                        transaction.updateBalances(transactionPeriod: transaction.period ?? Period(), todayPeriod: getPeriod(date: Date()), category: selectedCategory, account: account, toaccount: nil)
-                        
-                        // Update the period balances in the environment object:
-                        periodBalances.incomeActual = getPeriod(date: Date()).getBalance()?.incomeactual ?? 0.0
-                        periodBalances.expensesActual = getPeriod(date: Date()).getBalance()?.expensesactual ?? 0.0
+                        transaction.updateBalances(transactionPeriod: transaction.period ?? Period(), selectedPeriod: selectedPeriod.period, category: selectedCategory, account: account, toaccount: nil)
+//                        transaction.updateBalances(transactionPeriod: transaction.period ?? Period(), todayPeriod: getPeriod(date: Date()), category: selectedCategory, account: account, toaccount: nil)
                         
                         PersistenceController.shared.save() // save the reconciliation transaction and the balance updates
                         
@@ -175,7 +282,8 @@ struct AccountDetailView: View {
                     }
                     
                     Button {
-                        accountBalance.intAmount = Int(account.calcBalance(toDate: Date()))
+                        accountBalance.intAmount = Int(account.balance * 100)
+//                        accountBalance.intAmount = Int(account.calcBalance(toDate: Date()))
                     } label: {
                         Label("Cancel", systemImage: "x.circle")
                     }
@@ -184,7 +292,7 @@ struct AccountDetailView: View {
             }
             
             // Show button to delete the account if it has no transactions:
-            if transactions.filter({$0.account == account}).count == 0 {
+            if transactions.filter({$0.account == account || $0.toaccount == account}).count == 0 {
                 Button(role: .destructive) {
                     print("Deleting account \(account.name ?? "")")
                     viewContext.delete(account)
@@ -216,7 +324,7 @@ struct AccountDetailView: View {
                         
             TransactionListView(payee: nil, account: account, category: nil)
             .sheet(isPresented: $addTransactionView) {
-                AddTransactionView(payee: nil, account: account, category: categories[0])
+                TransactionDetailView(transaction: nil, payee: nil, account: account, category: nil)
             }
             
 //            deleteButton
@@ -249,88 +357,6 @@ struct AccountDetailView: View {
         }
     }
     
-    /*
-    private func updateBalances() { // update the category, account(s) and period balances. Exists in AddTransactionView and TransactionDetailView, and a special variant of it is in AccountDetailView
-        
-        // Note: this doesn't save the changes, so PersistenceController.shared.save() needs to be run after it
-        
-        
-        // Update the balance of the transaction's category, if the transaction has a category:
-        if selectedCategory != nil {
-            let categorybalance = selectedCategory?.getBalance(period: getPeriod(date: Date()))
-            if categorybalance != nil { // if the balance already exists, recalculate it
-                categorybalance?.categorybalance = selectedCategory?.calcBalance(period: getPeriod(date: Date())) ?? 0.0
-                categorybalance?.modifieddate = Date()
-            }
-            else  { // if the balance doesn't exist yet, create it and calculate it
-                let categorybalance = Balance(context: viewContext)
-                categorybalance.populate(type: "categorybalance", amount: selectedCategory?.calcBalance(period: getPeriod(date: Date())) ?? 0.0, period: getPeriod(date: Date()), account: nil, category: selectedCategory)
-            }
-        }
-        
-        // Update the balance of the transaction's account(s) as of END OF DAY TODAY:
-        let consideredDate = Date() // calcBalance compares this with start of day of the transation, so this is the same as saying end of day today
-        
-//        // Set the date to today if the current period is selected, or the end of the period if a past or future period is selected:
-//        var consideredDate: Date
-//        if selectedPeriod.period == getPeriod(date: Date()) {
-//            consideredDate = Date()
-//        }
-//        else {
-//            var components = DateComponents()
-//            components.year = Int(selectedPeriod.period.year)
-//            components.month = Int(selectedPeriod.period.month) + 1
-//            components.day = 1
-//            consideredDate = Calendar.current.startOfDay(for: Calendar.current.date(from: components) ?? Date())
-//        }
-        
-        let accountbalance = account.getBalance(period: getPeriod(date: Date()))
-        if accountbalance != nil { // if the balance already exists, recalculate it
-            accountbalance?.accountbalance = account.calcBalance(toDate: consideredDate)
-            accountbalance?.modifieddate = Date()
-            
-        }
-        else  { // if the balance doesn't exist yet, create it and calculate it
-            let accountbalance = Balance(context: viewContext)
-            accountbalance.populate(type: "accountbalance", amount: account.calcBalance(toDate: consideredDate), period: getPeriod(date: Date()), account: account, category: nil)
-        }
-        
-//        if transfer { // if this is a transfer, do the same for the to account
-//            let toaccountbalance = selectedToAccount?.getBalance(period: selectedPeriod.period)
-//            if toaccountbalance != nil { // if the balance already exists, recalculate it
-//                toaccountbalance?.accountbalance = selectedToAccount?.calcBalance(toDate: consideredDate) ?? 0.0
-//                toaccountbalance?.modifieddate = Date()
-//
-//            }
-//            else  { // if the balance doesn't exist yet, create it and calculate it
-//                let toaccountbalance = Balance(context: viewContext)
-//                toaccountbalance.populate(type: "accountbalance", amount: selectedToAccount?.calcBalance(toDate: consideredDate) ?? 0.0, period: selectedPeriod.period, account: selectedToAccount, category: nil)
-//            }
-//        }
-        
-        
-        // Update the period balance for either income or expenses:
-        
-        let incomeexpensesactual = getPeriod(date: Date()).getBalance()
-        if incomeexpensesactual != nil {
-            if selectedCategory?.type == "Income" {
-                incomeexpensesactual?.incomeactual = getPeriod(date: Date()).calcBalances().0
-            }
-            else if selectedCategory?.type == "Expense" {
-                incomeexpensesactual?.expensesactual = getPeriod(date: Date()).calcBalances().1
-            }
-            incomeexpensesactual?.modifieddate = Date()
-        }
-        
-        else { // if the balance doesn't exist yet, create it and calculate both the actual income and expenses
-            let incomeexpensesactual = Balance(context: viewContext)
-            let (incomeactual, expensesactual) = getPeriod(date: Date()).calcBalances()
-            incomeexpensesactual.populate(type: "incomeactual", amount: incomeactual, period: getPeriod(date: Date()), account: nil, category: nil)
-            incomeexpensesactual.populate(type: "expensesactual", amount: expensesactual, period: getPeriod(date: Date()), account: nil, category: nil)
-        }
-    }
-    */
-    
     private func getPeriod(date: Date) -> Period { // get the period corresponding to the chosen date. Exists in AccountDetailView, AddTransactionView, MiniReportingView, ReportingView, FxRateView, CSVExportView, DebtorView, ...?
         let year = Calendar.current.dateComponents([.year], from: date).year ?? 1900
         let month = Calendar.current.dateComponents([.month], from: date).month ?? 1
@@ -344,6 +370,501 @@ struct AccountDetailView: View {
         }
         return Period() // if no period is found, return a new one
     }
+    
+    private func handleTinkLinkCallback(incomingURL: URL) {
+        print("App was opened via URL: \(incomingURL)")
+        guard incomingURL.scheme == "nextexpenseapp" else {
+            print("Invalid URL scheme")
+            return
+        }
+        guard let components = URLComponents(url: incomingURL, resolvingAgainstBaseURL: true) else {
+            print("Invalid URL")
+            return
+        }
+        
+        guard let state = components.queryItems?.first(where: { $0.name == "state" })?.value else {
+            print("State not found")
+            return
+        }
+        
+        if state == "MyStateCode" {
+            print("User access granted")
+        }
+        else {
+            print("Invalid state code")
+            return
+        }
+    }
+    
+    /*
+    private func authorizeApp(scope: String) {
+        print("Authorizing the app")
+        
+        let clientID = "408dcac9914442a1b875da8e10f7a487" // sandbox
+        let clientSecret = "79a3313907fd46a193f9b0a196b14bfa" // sandbox
+//        let clientID = "dd0e0e14037347a8b9a003b869c4de87" // production
+//        let clientSecret = "4b4393da30d34e7c98f5966c13be504d" // production
+        
+        let url = URL(string: "https://api.tink.com/api/v1/oauth/token")!
+        
+        let requestBody = NSMutableData(data: "client_id=\(clientID)".data(using: .utf8)!)
+        requestBody.append("&client_secret=\(clientSecret)".data(using: .utf8)!)
+        requestBody.append("&grant_type=client_credentials".data(using: .utf8)!)
+        requestBody.append("&scope=\(scope)".data(using: .utf8)!)
+        
+        let header = ["Content-Type": "application/x-www-form-urlencoded"]
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.allHTTPHeaderFields = header
+        request.httpBody = requestBody as Data
+        
+        URLSession.shared.dataTask(with: request) { (data, response, error) in
+            guard error == nil else {
+                print(error!.localizedDescription)
+                return
+            }
+            guard let data = data else {
+                print("Empty data")
+                return
+            }
+            
+            do {
+                if let jsonData = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any] {
+                    if let accessToken = jsonData["access_token"] as? String {
+                        print("Access Token:", accessToken)
+                        tinkAccessToken = accessToken
+                    } else {
+                        print("Error: Access token not found in JSON")
+                        print(jsonData)
+                    }
+                } else {
+                    print("Error decoding JSON")
+                }
+            } catch {
+                print("Error decoding JSON:", error)
+            }
+            
+        }.resume()
+    }
+    
+    
+    private func createUser() {
+        print("Creating a user")
+        
+        let url = URL(string: "https://api.tink.com/api/v1/user/create")!
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        
+        let requestBody: [String: Any] = [
+            "external_user_id": "user_123_abc",
+            "market": "GB",
+            "locale": "en_US"
+        ]
+        
+        do {
+            let jsonData = try JSONSerialization.data(withJSONObject: requestBody)
+            request.httpBody = jsonData
+        } catch {
+            print("Error encoding JSON:", error)
+            return
+        }
+        
+        request.addValue("Bearer \(tinkAccessToken)", forHTTPHeaderField: "Authorization")
+        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+        
+        URLSession.shared.dataTask(with: request) { (data, response, error) in
+            guard error == nil else {
+                print(error!.localizedDescription)
+                return
+            }
+            guard let data = data else {
+                print("Empty data")
+                return
+            }
+            
+            do {
+                if let jsonData = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any] {
+                    if let externalUserId = jsonData["external_user_id"] as? String, let userId = jsonData["user_id"] as? String {
+                        print("User created:", externalUserId)
+                        print("Tink user id", userId)
+                    } else {
+                        print("Error: User was not created")
+                        print(jsonData)
+                    }
+                } else {
+                    print("Error decoding JSON")
+                }
+            } catch {
+                print("Error decoding JSON:", error)
+            }
+            
+        }.resume()
+    }
+    
+    private func grantUserAccess() {
+        print("Granting access to user")
+        
+        let actor_client_id = "df05e4b379934cd09963197cc855bfe9"
+        let externalUserID = "user_123_abc"
+        let clientID = "408dcac9914442a1b875da8e10f7a487" // sandbox
+        
+        let url = URL(string: "https://api.tink.com/api/v1/oauth/authorization-grant/delegate")!
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        
+//        let requestBody: [String: Any] = [
+////            "actor_client_id" : actor_client_id,
+////            "user_id": "user_123_abc",
+////            "id_hint": "John%20Doe",
+//            "scope": "authorization:read,authorization:grant,credentials:refresh,credentials:read,credentials:write,providers:read,user:read"
+//        ]
+        
+        let requestBody = "external_user_id=\(externalUserID)&id_hint=Michael%20Frisk&actor_client_id=\(actor_client_id)&scope=credentials:read,credentials:refresh,credentials:write,providers:read,user:read,authorization:read"
+                
+        request.httpBody = requestBody.data(using: .utf8)
+        
+//        do {
+//            let jsonData = try JSONSerialization.data(withJSONObject: requestBody)
+//            request.httpBody = jsonData
+//        } catch {
+//            print("Error encoding JSON:", error)
+//            return
+//        }
+        
+        request.addValue("Bearer \(tinkAccessToken)", forHTTPHeaderField: "Authorization")
+        request.addValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
+        
+        URLSession.shared.dataTask(with: request) { (data, response, error) in
+            guard error == nil else {
+                print(error!.localizedDescription)
+                return
+            }
+            guard let data = data else {
+                print("Empty data")
+                return
+            }
+            
+            do {
+                if let jsonData = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any] {
+                    if let code = jsonData["code"] as? String {
+                        print("Code: ", code)
+                        
+                        let tinkLinkURL = "https://link.tink.com/1.0/transactions/connect-accounts?client_id=\(clientID)&state=MyStateCode&redirect_uri=nextexpenseapp%3A%2F%2F&authorization_code=\(code)&market=GB&locale=en_US"
+                        
+                        print(tinkLinkURL)
+                        
+                        openURL(URL(string: tinkLinkURL)!)
+                        
+                    } else {
+                        print("Error: Code was not received")
+                        print(jsonData)
+                    }
+                } else {
+                    print("Error decoding JSON")
+                }
+            } catch {
+                print("Error decoding JSON:", error)
+            }
+            
+        }.resume()
+    }
+    
+    // Send the external user id and the tink access token, and get a code. Then run getUserAccessTokens() to exchange the code for a user access token
+    private func getUserAccessCode() {
+        print("Getting user access code")
+        
+        let externalUserID = "user_123_abc"
+        
+        let url = URL(string: "https://api.tink.com/api/v1/oauth/authorization-grant")!
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        
+        let requestBody = "external_user_id=\(externalUserID)&scope=accounts:read,balances:read,transactions:read,provider-consents:read"
+        
+        request.httpBody = requestBody.data(using: .utf8)
+        
+        request.addValue("Bearer \(tinkAccessToken)", forHTTPHeaderField: "Authorization")
+        
+        URLSession.shared.dataTask(with: request) { (data, response, error) in
+            guard error == nil else {
+                print(error!.localizedDescription)
+                return
+            }
+            guard let data = data else {
+                print("Empty data")
+                return
+            }
+            
+            do {
+                if let jsonData = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any] {
+                    if let code = jsonData["code"] as? String {
+                        print("Code:", code)
+                        
+                        // EXCHANGE THE CODE FOR THE USER TOKENS
+                        getUserAccessTokens(code: code)
+                                            
+                    } else {
+                        print("Error: Code not found in JSON")
+                        print(jsonData)
+                    }
+                } else {
+                    print("Error decoding JSON")
+                }
+            } catch {
+                print("Error decoding JSON:", error)
+            }
+            
+        }.resume()
+    }
+        
+    // Exchange the code for a user access token:
+    private func getUserAccessTokens(code: String) {
+        print("Exchanging code for user access tokens")
+        
+        let clientID = "408dcac9914442a1b875da8e10f7a487" // sandbox
+        let clientSecret = "79a3313907fd46a193f9b0a196b14bfa" // sandbox
+        //        let clientID = "dd0e0e14037347a8b9a003b869c4de87" // production
+        //        let clientSecret = "4b4393da30d34e7c98f5966c13be504d" // production
+        
+        
+        let url = URL(string: "https://api.tink.com/api/v1/oauth/token")!
+        
+        let requestBody = NSMutableData(data: "code=\(code)".data(using: .utf8)!)
+        requestBody.append("&client_id=\(clientID)".data(using: .utf8)!)
+        requestBody.append("&client_secret=\(clientSecret)".data(using: .utf8)!)
+        requestBody.append("&grant_type=authorization_code".data(using: .utf8)!)
+        
+        let header = ["Content-Type": "application/x-www-form-urlencoded"]
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.allHTTPHeaderFields = header
+        request.httpBody = requestBody as Data
+        
+        URLSession.shared.dataTask(with: request) { (data, response, error) in
+            guard error == nil else {
+                print(error!.localizedDescription)
+                return
+            }
+            guard let data = data else {
+                print("Empty data")
+                return
+            }
+            
+            do {
+                if let jsonData = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any] {
+                    print(jsonData)
+                    if let accessToken = jsonData["access_token"] as? String, let refreshToken = jsonData["refresh_token"] as? String {
+                        print("Access Token:", accessToken)
+                        print("Refresh Token:", refreshToken)
+                        userAccessToken = accessToken
+                        //                            tinkRefreshToken = refreshToken
+                    } else {
+                        print("Error: User tokens not found in JSON")
+                        print(jsonData)
+                    }
+                } else {
+                    print("Error decoding JSON")
+                }
+            } catch {
+                print("Error decoding JSON:", error)
+            }
+        }.resume()
+    }
+    
+    // Send the user access token, get the list of accounts, display it. Tap on an account to get its balance and its id, store the id on the account, and put the balance in the account reconciliation balance:
+    private func getAccountList() {
+        print("Fetching account list")
+        let url = URL(string: "https://api.tink.com/data/v2/accounts")!
+        
+        let header = ["Authorization": "Bearer \(userAccessToken)"]
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        request.allHTTPHeaderFields = header
+        
+        URLSession.shared.dataTask(with: request) { (data, response, error) in
+            guard error == nil else {
+                print(error!.localizedDescription)
+                return
+            }
+            guard let data = data else {
+                print("Empty data")
+                return
+            }
+
+            do {
+                if let jsonData = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any] {
+                    print("Data:")
+                    print(jsonData)
+                    
+                    if let accounts = jsonData["accounts"] as? [[String: Any]] {
+                        print("Account list:")
+                        print(accounts)
+                        
+                        accountInfo = accounts.compactMap { account in
+                            guard
+                                let name = account["name"] as? String,
+                                let id = account["id"] as? String,
+                                let type = account["type"] as? String,
+                                let balances = account["balances"] as? [String: Any],
+                                let booked = balances["booked"] as? [String: Any],
+                                let amount = booked["amount"] as? [String: Any],
+                                let unscaledValueString = amount["value"] as? [String: Any],
+                                let unscaledValue = unscaledValueString["unscaledValue"] as? String,
+                                let balance = Int(unscaledValue)
+                            else {
+                                return nil
+                            }
+                            return (name: name, id: id, type: type, balance: balance)
+                        }
+                        print("Account info:")
+                        print(accountInfo)
+                        
+                        showAccountList = true
+                        
+                    } else {
+                        print("No account information found")
+                    }
+                } else {
+                    print("Error decoding JSON")
+                }
+            } catch {
+                print("Error decoding JSON:", error)
+            }
+            
+        }.resume()
+    }
+    
+    // Send the account id and the user access token, and get the account balance?:
+    private func getAccountBalance() {
+        if account.tinkid != nil {
+            print("Getting account balance")
+            let url = URL(string: "https://api.tink.com/data/v2/accounts/\(account.tinkid ?? "")/balances")!
+            
+            let header = ["Authorization": "Bearer \(userAccessToken)"]
+            
+            var request = URLRequest(url: url)
+            request.httpMethod = "GET"
+            request.allHTTPHeaderFields = header
+            
+            URLSession.shared.dataTask(with: request) { (data, response, error) in
+                guard error == nil else {
+                    print(error!.localizedDescription)
+                    return
+                }
+                guard let data = data else {
+                    print("Empty data")
+                    return
+                }
+
+                do {
+                    if let jsonData = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any] {
+                        print("Data:")
+                        print(jsonData)
+                        
+                        /*if let accounts = jsonData["accounts"] as? [[String: Any]] {
+                            print("Account list:")
+                            print(accounts)
+                            
+                            accountInfo = accounts.compactMap { account in
+                                if let name = account["name"] as? String,
+                                   let id = account["id"] as? String,
+                                let type = account["type"] as? String {
+                                    return (name: name, id: id, type: type)
+                                }
+                                return nil
+                            }
+                            
+                            print(accountInfo)
+                            
+                            showAccountList = true
+                            
+                        } else {
+                            print("No account balance found")
+                        }*/
+                    } else {
+                        print("Error decoding JSON")
+                    }
+                } catch {
+                    print("Error decoding JSON:", error)
+                }
+                
+            }.resume()
+        }
+    }
+    */
+    
+    
+    
+    
+    /*private func openTinkLink() {
+        // Guide: https://docs.tink.com/resources/transactions/connect-to-a-bank-account
+        
+        // Sandbox - Transactions:
+        openURL(URL(string: "https://link.tink.com/1.0/transactions/connect-accounts/?client_id=408dcac9914442a1b875da8e10f7a487&redirect_uri=nextexpenseapp%3A%2F%2F&market=SE&locale=en_US")!)
+        
+        // Real world Sweden - Transactions - also gives access to accounts??:
+//        openURL(URL(string: "https://link.tink.com/1.0/transactions/connect-accounts/?client_id=dd0e0e14037347a8b9a003b869c4de87&redirect_uri=nextexpenseapp%3A%2F%2F&market=SE&locale=en_US")!)
+        
+        // Real world Sweden - Handelsbanken - Account check:
+//        openURL(URL(string: "https://link.tink.com/1.0/account-check/?client_id=dd0e0e14037347a8b9a003b869c4de87&redirect_uri=nextexpenseapp%3A%2F%2F&market=SE&locale=en_US&input_provider=handelsbanken-bankid&input_username=198406227432")!)
+        
+        
+        // Demo bank Sweden - account check?? - doesn't work:
+//        openURL(URL(string: "https://link.tink.com/1.0/account-check/?client_id=dd0e0e14037347a8b9a003b869c4de87&redirect_uri=https%3A%2F%2Fconsole.tink.com%2Fcallback&market=SE&locale=en_US&input_provider=se-demobank-password&input_username=u27678322")!)
+    }
+    
+    private func getTinkAccessToken() { // exchange the code obtained in the callback url for an access token
+        let clientID = "408dcac9914442a1b875da8e10f7a487" // sandbox
+        let clientSecret = "79a3313907fd46a193f9b0a196b14bfa" // sandbox
+//        let clientID = "dd0e0e14037347a8b9a003b869c4de87" // production
+//        let clientSecret = "4b4393da30d34e7c98f5966c13be504d" // production
+                
+        let url = URL(string: "https://api.tink.com/api/v1/oauth/token")!
+        
+        let data = NSMutableData(data: "code=\(tinkCode)".data(using: .utf8)!)
+        data.append("&client_id=\(clientID)".data(using: .utf8)!)
+        data.append("&client_secret=\(clientSecret)".data(using: .utf8)!)
+        data.append("&grant_type=authorization_code".data(using: .utf8)!)
+        
+        let header = ["Content-Type": "application/x-www-form-urlencoded"]
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.allHTTPHeaderFields = header
+        request.httpBody = data as Data
+        
+        URLSession.shared.dataTask(with: request) { (data, response, error) in
+            guard error == nil else {
+                print(error!.localizedDescription)
+                return
+            }
+            guard let data = data else {
+                print("Empty data")
+                return
+            }
+            
+            do {
+                if let jsonData = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any] {
+                    if let accessToken = jsonData["access_token"] as? String {
+                        print("Access Token:", accessToken)
+                        tinkAccessToken = accessToken
+                    } else {
+                        print("Error: Access token not found in JSON")
+                        print(jsonData)
+                    }
+                } else {
+                    print("Error decoding JSON")
+                }
+            } catch {
+                print("Error decoding JSON:", error)
+            }
+            
+        }.resume()
+    }*/
 }
 
 //struct AccountDetailView_Previews: PreviewProvider {

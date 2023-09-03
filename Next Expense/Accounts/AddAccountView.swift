@@ -32,6 +32,7 @@ struct AddAccountView: View {
         NavigationView { // so that the pickers work
             Form {
                 TextField("Account name", text: $name)
+                    .disableAutocorrection(true)
                 Picker("Currency", selection: $currency) {
                     ForEach(currencies, id: \.self) {
                         Text($0)

@@ -30,8 +30,10 @@ struct AccountView: View {
                 .padding(.leading, 25) // to align it with the Budget and External headings
             Spacer()
 //            Text(balance / 100, format: .currency(code: account.currency ?? "EUR"))
-            Text((account.getBalance(period: getPeriod(date: Date()))?.accountbalance ?? 0.0) / 100, format: .currency(code: account.currency ?? "EUR"))
+//            Text((account.getBalance(period: getPeriod(date: Date()))?.accountbalance ?? 0.0) / 100, format: .currency(code: account.currency ?? "EUR"))
+            Text(account.balance, format: .currency(code: account.currency ?? "EUR"))
                 .font(.callout)
+            /*
                 .onAppear {
 //                    balance = account.calcBalance(toDate: Date())
                     
@@ -46,10 +48,12 @@ struct AccountView: View {
 //                    accountbalance?.modifieddate = Calendar.current.date(byAdding: .day, value: -2, to: Date())
 //                    PersistenceController.shared.save()
                 }
+             */
         }
 //        .listRowBackground(Color.clear) // remove the grey background from the list items - WHY DOESN'T THIS WORK??
     }
     
+    /*
     func getPeriod(date: Date) -> Period { // get the period corresponding to the chosen date. Exists in AccountDetailView, AddTransactionView, MiniReportingView, ReportingView, FxRateView, CSVExportView, DebtorView, CategoryListView...?
         let year = Calendar.current.dateComponents([.year], from: date).year ?? 1900
         let month = Calendar.current.dateComponents([.month], from: date).month ?? 1
@@ -63,6 +67,7 @@ struct AccountView: View {
         }
         return Period() // if no period is found, return a new one
     }
+     */
 }
 
 //struct AccountView_Previews: PreviewProvider {

@@ -24,7 +24,7 @@ struct FxRateView: View {
     @State private var currency2 = "SEK"
     @State private var period = Period() // period (month) selected in the picker
     
-    @StateObject var rateAmount = AddTransactionView.Amount() // stores the rate amount, and the visibility of the numpad as seen from NumpadView / NumpadKeyView
+    @StateObject var rateAmount = TransactionDetailView.Amount() // stores the rate amount, and the visibility of the numpad as seen from NumpadView / NumpadKeyView
     
     // Define available currencies:
     let currencies = ["EUR", "SEK"]

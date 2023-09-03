@@ -5,6 +5,9 @@
 //  Created by Michael Frisk on 2022-09-23.
 //
 
+/*
+ 
+ 
 import SwiftUI
 
 struct CategoryListView: View {
@@ -148,7 +151,7 @@ struct CategoryListView: View {
                         AddCategoryView()
                     }
                     .sheet(isPresented: $addTransactionView) {
-                        AddTransactionView(payee: nil, account: accounts[0], category: categories[0])
+                        TransactionDetailView(transaction: nil, payee: nil, account: nil, category: nil)
                     }
                     .sheet(isPresented: $settingsView) {
                         SettingsView()
@@ -381,3 +384,6 @@ struct CategoryListView_Previews: PreviewProvider {
         CategoryListView()
     }
 }
+
+
+*/

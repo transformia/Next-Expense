@@ -45,7 +45,7 @@ struct CategoryGroupView: View {
             Spacer()
             
             if showCategoryGroupBalances {
-                Text(categoryGroupBudget / 100, format: .currency(code: defaultCurrency))
+                Text(categoryGroupBudget, format: .currency(code: defaultCurrency))
                     .font(.caption)
                     .foregroundColor(.blue)
                     .onAppear {
@@ -66,13 +66,13 @@ struct CategoryGroupView: View {
                 
                 Spacer()
                 
-                Text(categoryGroupActual / 100, format: .currency(code: defaultCurrency))
+                Text(categoryGroupActual, format: .currency(code: defaultCurrency))
                     .font(.caption)
                 
                 Spacer()
                 
 //                if categoryGroup.categories?.count ?? 0 > 0 && categoryGroup.categories[0].type == "Expense" {
-                    Text(categoryGroupRemain / 100, format: .currency(code: defaultCurrency)) // remaining budget
+                    Text(categoryGroupRemain, format: .currency(code: defaultCurrency)) // remaining budget
                         .font(.caption)
                         .foregroundColor(categoryGroupRemain < 0 ? .red : .green)
 //                }
@@ -93,8 +93,10 @@ struct CategoryGroupView: View {
         categoryGroupBudget = 0.0
         categoryGroupActual = 0.0
         for category in categoryGroup.categories ?? [] {
-            categoryGroupBudget += Double((category as! Category).getBudget(period: selectedPeriod.period))
-            categoryGroupActual += Double((category as! Category).getBalance(period: selectedPeriod.period)?.categorybalance ?? 0.0)
+            categoryGroupBudget += Double((category as! Category).budget)
+//            categoryGroupBudget += Double((category as! Category).getBudget(period: selectedPeriod.period))
+            categoryGroupActual += Double((category as! Category).balance)
+//            categoryGroupActual += Double((category as! Category).getBalance(period: selectedPeriod.period)?.categorybalance ?? 0.0)
         }
         categoryGroupRemain = categoryGroupBudget + categoryGroupActual
     }

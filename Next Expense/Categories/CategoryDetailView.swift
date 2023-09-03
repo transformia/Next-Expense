@@ -43,6 +43,8 @@ struct CategoryDetailView: View {
     
     @FocusState var isFocused: Bool // determines whether the focus is on the text field or not
     
+    @State private var defaultCurrency = UserDefaults.standard.string(forKey: "DefaultCurrency") ?? "EUR"
+    
     var body: some View {
         VStack {
             HStack {
@@ -65,6 +67,7 @@ struct CategoryDetailView: View {
             }
             
             HStack {
+                Text("Type:")
                 Picker("Category type", selection: $type) {
                     ForEach(types, id: \.self) {
                         Text($0)
@@ -77,7 +80,10 @@ struct CategoryDetailView: View {
                     category.type = type
                     PersistenceController.shared.save()
                 }
-                
+            }
+            
+            HStack {
+                Text("Group:")
                 Picker("Category group", selection: $categoryGroup) {
                     ForEach(categoryGroups, id: \.self) { (categoryGroup: CategoryGroup) in
                         Text(categoryGroup.name ?? "")
@@ -114,9 +120,56 @@ struct CategoryDetailView: View {
                 .padding()
             }
             
+            // Show the carried over budget, the selected period's budget, the balance up until today, the remaining budget today, the upcoming transactions' balance, and the remaining budget at the end of this period:
+            VStack {
+                
+                HStack {
+                    Spacer()
+                    Text("Budget carried over")
+                    Spacer()
+                    Text(category.remainingbudget - category.budget - category.balance, format: .currency(code: defaultCurrency)) // budget carried over from the previous period
+                        .foregroundColor(.blue)
+                    Spacer()
+                }
+                
+                HStack {
+                    Spacer()
+                    Text("Budgeted this month")
+                    Spacer()
+                    Text(category.budget, format: .currency(code: defaultCurrency)) // budget for this period
+                        .foregroundColor(.blue)
+                    Spacer()
+                }
+                
+                HStack {
+                    Spacer()
+                    Text("Spent this month")
+                    Spacer()
+                    Text(category.balance, format: .currency(code: defaultCurrency)) // balance until today
+                    Spacer()
+                }
+                HStack {
+                    Spacer()
+                    Text("Future transactions")
+                    Spacer()
+                    Text(category.balanceperiod - category.balance, format: .currency(code: defaultCurrency)) // future transactions in this period
+                    Spacer()
+                }
+                
+                HStack {
+                    Spacer()
+                    Text("Budget remaining")
+                    Spacer()
+                    Text(category.remainingbudget + category.balanceperiod - category.balance, format: .currency(code: defaultCurrency)) // remaining balance including future transactions
+                        .foregroundColor(category.remainingbudget + category.balanceperiod - category.balance >= 0 ? .green : .red)
+                    Spacer()
+                }
+            }
+            .font(.caption)
+            
             TransactionListView(payee: nil, account: nil, category: category)
             .sheet(isPresented: $addTransactionView) {
-                AddTransactionView(payee: nil, account: accounts[0], category: category)
+                TransactionDetailView(transaction: nil, payee: nil, account: nil, category: category)
             }
         }
     }

@@ -62,11 +62,14 @@ struct TransactionListView: View {
                 List {
                     ForEach(periods) { period in
                         if (
-                            (showFutureTransactions && period.transactions?.filter({(category == nil || ($0 as! Transaction).category == category) && (account == nil || ($0 as! Transaction).account == account)}).count ?? 0 > 0) // if future transactions are shown, and there are transactions in the period, either with the selected account or category, or with no selection of account or category
-                            || (period.transactions?.filter({Calendar.current.startOfDay(for: ($0 as! Transaction).date ?? Date()) <= Date() && (category == nil || ($0 as! Transaction).category == category) && (account == nil || ($0 as! Transaction).account == account)}).count ?? 0 > 0) // or if there are non-future transactions in the period, either with the selected account or category, or with no selection of account or category
+                            (showFutureTransactions // if I'm showing future transactions
+                             && period.transactions?.filter({(category == nil || ($0 as! Transaction).category == category) // and this period has at least one transaction that has the provided category, or no category was provided
+                                && ( (account == nil || ($0 as! Transaction).account == account) || (account == nil || ($0 as! Transaction).toaccount == account) ) // and this period has at least one transaction that has the provided account, or no account was provided
+                                && (payee == nil || ($0 as! Transaction).payee == payee)}).count ?? 0 > 0) // and this period has at least one transaction that has the provided payee, or no payee was provided
+                            || (period.transactions?.filter({Calendar.current.startOfDay(for: ($0 as! Transaction).date ?? Date()) <= Date() && (category == nil || ($0 as! Transaction).category == category) && ( (account == nil || ($0 as! Transaction).account == account) || (account == nil || ($0 as! Transaction).toaccount == account) ) && (payee == nil || ($0 as! Transaction).payee == payee)}).count ?? 0 > 0) // or if there are non-future transactions in the period, with the same criteria as above
                         ) {
                             
-                            PeriodTransactionsView(period: period)
+                            PeriodTransactionsView(period: period) // show the period's month and year
                             
                             if period.showtransactions {
                                 ForEach(transactions) { transaction in
@@ -101,26 +104,27 @@ struct TransactionListView: View {
                 .listStyle(PlainListStyle())
                 //                        .padding(EdgeInsets(top: 0, leading: -20, bottom: 0, trailing: -20)) // reduce side padding of the list items
                 .sheet(isPresented: $addTransactionView) {
-                    AddTransactionView(payee: nil, account: account ?? accounts[0], category: category ?? categories[0])
+                    TransactionDetailView(transaction: nil, payee: payee, account: account, category: category)
                 }
                 
                 Button {
-                    if(categories.count > 0 && accounts.count > 0) {
+//                        if(categories.count > 0 && accounts.count > 0) {
                         addTransactionView.toggle() // show the view where I can add a new element
-                    }
-                    else {
-                        print("You need to create at least one account and one category before you can create a transaction")
-                    }
+//                        }
+//                        else {
+//                            print("You need to create at least one account and one category before you can create a transaction")
+//                        }
                 } label: {
                     Image(systemName: "plus")
                         .resizable()
-                        .frame(width: 18, height: 18)
+                        .frame(width: 24, height: 24)
                         .foregroundColor(.white)
-                        .padding(6)
+                        .padding(8)
                         .background(.green)
                         .clipShape(Circle())
                 }
                 .padding(.bottom, 20.0)
+                
             }
             .navigationTitle("Transactions")
             .navigationBarTitleDisplayMode(.inline)
@@ -131,41 +135,9 @@ struct TransactionListView: View {
             }
             
             if account == nil && category == nil { // if this view wasn't called from an account or a category, i.e. if I'm looking at the full transaction view:
-                if(periodBalances.showBalanceAnimation) { // show the update of the category balance for x seconds
-                    if !periodBalances.balanceAfter { // showing the balance before the transaction
-                        HStack {
-                            Text(periodBalances.category.name ?? "")
-                            Text(periodBalances.remainingBudgetBefore / 100, format: .currency(code: "EUR"))
-                        }
-                        .padding()
-                        .foregroundColor(periodBalances.remainingBudgetBefore > 0 ? .black : .white)
-                        .bold()
-                        .background(periodBalances.remainingBudgetBefore > 0 ? .green : .red)
-                        .clipShape(Capsule())
-                        .onAppear {
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 1.50) { // make it change after x seconds
-                                periodBalances.balanceAfter = true
-                            }
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 3.00) { // make it disappear after x seconds
-                                periodBalances.showBalanceAnimation = false
-                                periodBalances.balanceAfter = false
-                            }
-                        }
-                    }
-                    
-                    else { // showing the balance after the transaction
-                        HStack {
-                            Text(periodBalances.category.name ?? "")
-                            //                        Text(periodBalances.category.calcRemainingBudget(period: selectedPeriod.period) / 100, format: .currency(code: "EUR"))
-                            Text(periodBalances.remainingBudgetAfter / 100, format: .currency(code: "EUR"))
-                        }
-                        .padding()
-                        .foregroundColor(periodBalances.remainingBudgetAfter > 0 ? .black : .white)
-                        .bold()
-                        .background(periodBalances.remainingBudgetAfter > 0 ? .green : .red)
-                        .clipShape(Capsule())
-                    }
-                }
+                
+                // Show the balance before and after the transaction:
+                CategoryBalanceBubble()
             }
         }  // end of ZStack
     }
@@ -196,6 +168,14 @@ struct TransactionListView: View {
                     // Increment the recurring transaction's date and update its period:
                     transaction.date = Calendar.current.date(byAdding: .month, value: 1, to: transaction.date ?? Date())
                     transaction.period = getPeriod(date: transaction.date ?? Date())
+                    
+                    // Update the category balance of that category:
+                    transaction.category?.calcBalance(period: selectedPeriod.period)
+                    
+                    // Update the account and to account balances:
+                    transaction.account?.calcBalance(toDate: Date())
+                    transaction.toaccount?.calcBalance(toDate: Date())
+                    
                     
                     PersistenceController.shared.save() // save the item
                 }

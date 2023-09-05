@@ -54,10 +54,9 @@ struct AccountDetailView: View {
     @FocusState var isFocused: Bool // determines whether the focus is on the text field or not
     
     @Environment(\.openURL) var openURL
-//    @State private var tinkCode = ""
-    @State private var tinkAccessToken = ""
-    @State private var tinkRefreshToken = ""
-    @State private var userAccessToken = ""
+    
+//    @State private var clientAccessToken = ""
+//    @State private var userAccessToken = ""
     
     @State private var accountInfo: [(String, String, String, Int)] = []
     @State private var showAccountList = false
@@ -117,40 +116,68 @@ struct AccountDetailView: View {
                     } // when the account balance changes because a transaction has been modified, also update the reconciliation balance so that it doesn't think that there is suddenly a reconciliation difference
             }
             
-//            Text("Tink account id: " + (account.tinkid ?? ""))
+//            Text("Tink account id: " + (account.externalid ?? ""))
             
-            Button {
-                TinkService.shared.newUser() { success, tinkLinkURL in
-                    print("Tink Link generated:")
-                    print(tinkLinkURL ?? "")
-                }
-            } label: {
-                Label("Create user", systemImage: "key")
-            }
-            
-            Button {
-                TinkService.shared.giveAccess() { success, tinkLinkURL in
-                    if success {
+            Group {
+                
+                Button {
+                    TinkService.shared.newUser() { success, tinkLinkURL in
+                        print("Tink Link generated")
 //                        print(tinkLinkURL ?? "")
-                        openURL(URL(string: tinkLinkURL!)!)
                     }
-                    else {
-                        print("Tink link wan't generated")
+                } label: {
+                    Label("Create user", systemImage: "key")
+                }
+                
+                Button {
+                    TinkService.shared.giveAccess() { success, tinkLinkURL in
+                        if success {
+                            //                        print(tinkLinkURL ?? "")
+                            openURL(URL(string: tinkLinkURL!)!)
+                        }
+                        else {
+                            print("Tink link wan't generated")
+                        }
                     }
+                } label: {
+                    Label("Grant user access", systemImage: "key")
                 }
-            } label: {
-                Label("Grant user access", systemImage: "key")
-            }
-            .onOpenURL { incomingURL in
-                handleTinkLinkCallback(incomingURL: incomingURL)
-            }
-            
-            Button {
-                TinkService.shared.getUserAccessToken(tinkAccessToken: tinkAccessToken) { success, userAccessToken in
-                    
+                .onOpenURL { incomingURL in
+                    handleTinkLinkCallback(incomingURL: incomingURL)
                 }
-            } label: {
-                Label("Get user access token", systemImage: "key")
+                
+                Button {
+                    TinkService.shared.authorizeApp(scope: "authorization:grant") { success, clientAccessToken in
+                        if success {
+                            TinkService.shared.getUserAccessToken()
+                        }
+                    }
+                } label: {
+                    Label("Get client then user access token", systemImage: "key")
+                }
+                
+                /*Button {
+                    TinkService.shared.authorizeApp(scope: "authorization:grant") { success, clientAccessToken in
+//                        print(clientAccessToken ?? "")
+                    }
+                } label: {
+                    Label("Get client access token", systemImage: "key")
+                }
+                
+                Button {
+                    TinkService.shared.getUserAccessToken()
+                } label: {
+                    Label("Get user access token", systemImage: "key")
+                }*/
+                
+                Button {
+                    linkAccount()
+                } label: {
+                    Label("Link account", systemImage: "key")
+                }
+                .sheet(isPresented: $showAccountList) {
+                    TinkAccountList(account: account, accountInfo: accountInfo, balance: accountBalance)
+                }
             }
             
             /*Group {
@@ -233,7 +260,7 @@ struct AccountDetailView: View {
                 TinkAccountList(account: account, accountInfo: accountInfo, balance: accountBalance)
             }
             
-//            if account.tinkid != nil {
+//            if account.externalid != nil {
 //                Button {
 //                    getAccountBalance()
 //                } label: {
@@ -672,14 +699,17 @@ struct AccountDetailView: View {
                 print("Error decoding JSON:", error)
             }
         }.resume()
-    }
+    }*/
     
     // Send the user access token, get the list of accounts, display it. Tap on an account to get its balance and its id, store the id on the account, and put the balance in the account reconciliation balance:
-    private func getAccountList() {
+    private func linkAccount() {
         print("Fetching account list")
         let url = URL(string: "https://api.tink.com/data/v2/accounts")!
         
-        let header = ["Authorization": "Bearer \(userAccessToken)"]
+        let header = ["Authorization": "Bearer \(TinkService.shared.userAccessToken)"]
+        
+//        print("User access token:")
+//        print(TinkService.shared.userAccessToken)
         
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
@@ -740,11 +770,11 @@ struct AccountDetailView: View {
     
     // Send the account id and the user access token, and get the account balance?:
     private func getAccountBalance() {
-        if account.tinkid != nil {
+        if account.externalid != nil {
             print("Getting account balance")
-            let url = URL(string: "https://api.tink.com/data/v2/accounts/\(account.tinkid ?? "")/balances")!
+            let url = URL(string: "https://api.tink.com/data/v2/accounts/\(account.externalid ?? "")/balances")!
             
-            let header = ["Authorization": "Bearer \(userAccessToken)"]
+            let header = ["Authorization": "Bearer \(TinkService.shared.userAccessToken)"]
             
             var request = URLRequest(url: url)
             request.httpMethod = "GET"
@@ -795,10 +825,6 @@ struct AccountDetailView: View {
             }.resume()
         }
     }
-    */
-    
-    
-    
     
     /*private func openTinkLink() {
         // Guide: https://docs.tink.com/resources/transactions/connect-to-a-bank-account

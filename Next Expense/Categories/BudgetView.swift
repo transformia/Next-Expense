@@ -30,6 +30,11 @@ struct BudgetView: View {
         animation: .default)
     private var accounts: FetchedResults<Account>
     
+    @FetchRequest(
+        sortDescriptors: [NSSortDescriptor(keyPath: \Payee.name, ascending: true)],
+        animation: .default)
+    private var payees: FetchedResults<Payee> // to be able to find the payee corresponding to a string
+    
     @State private var tutorialStep = 0 // step in the tutorial. 0 means that it is inactive
     
     @State private var addTransactionView = false // determines whether that view is displayed or not
@@ -50,6 +55,115 @@ struct BudgetView: View {
             
             NavigationView {
                 VStack {
+                    
+                    Button {
+                        TinkService.shared.authorizeApp(scope: "authorization:grant") { success, clientAccessToken in
+                            if success {
+                                TinkService.shared.getUserAccessToken()
+                            }
+                        }
+                    } label: {
+                        Label("Get client then user access token", systemImage: "key")
+                    }
+                    
+                    Button {
+                        TinkService.shared.getTransactions() { success, tinkTransactions in
+//                            print(tinkTransactions)
+//                            print(tinkTransactions[0])
+                            
+                            for tinkTransaction in tinkTransactions {
+                                
+                                // Get the account from the external account id:
+                                guard let externalId = tinkTransaction["accountId"] as? String,
+                                      let account = matchAccount(externalId: externalId) else {
+                                    // Skip this transaction if the account isn't found
+//                                    print("Account not found. Skipping")
+                                    continue
+                                }
+                                    
+//                                print(tinkTransaction)
+                                
+                                // Get the provider transaction id:
+                                guard let identifiers = tinkTransaction["identifiers"] as? [String: Any],
+                                      let providerTransactionId = identifiers["providerTransactionId"] else {
+                                    // Skip this transaction if it doesn't have a provider transaction id
+                                    print("Provider transaction id not found. Skipping")
+                                    continue
+                                }
+                                
+                                // Get the date:
+                                guard let dates = tinkTransaction["dates"] as? [String: Any],
+                                      let dateString = dates["booked"] as? String,
+                                      let date = dateFormatterTink.date(from: dateString) else {
+                                    // Skip this transaction if date information is missing or invalid
+                                    print("Date not found. Skipping")
+                                    continue
+                                }
+                                
+                                // Get the currency and amount:
+                                guard let amountNode = tinkTransaction["amount"] as? [String: Any],
+                                      let currencyCode = amountNode["currencyCode"] as? String,
+                                      let value = amountNode["value"] as? [String: Any],
+                                      let unscaledValue = value["unscaledValue"] as? String,
+                                      let intAmount = Int(unscaledValue) else {
+                                    // Skip this transaction if amount information is missing or invalid
+                                    print("Amount or currency not found. Skipping")
+                                    continue
+                                }
+                                
+                                // Get the descriptions:
+                                guard let descriptions = tinkTransaction["descriptions"] as? [String: Any],
+                                      let displayDescription = descriptions["display"] as? String,
+                                      let originalDescription = descriptions["original"] as? String else {
+                                    // Skip this transaction if it doesn't have descriptions
+                                    print("Descriptions not found. Skipping")
+                                    continue
+                                }
+                                
+                                // Determine the payee:
+                                var payee: Payee? = nil
+                                
+                                for existingPayee in payees {
+                                    if(existingPayee.name == displayDescription || existingPayee.name == originalDescription) {
+                                        payee = existingPayee
+                                        break
+                                    }
+                                }
+                                
+                                if payee == nil { // if not payee was found, create it
+                                    print("Creating payee ", displayDescription)
+                                    let newPayee = Payee(context: viewContext)
+                                    newPayee.id = UUID()
+                                    newPayee.name = displayDescription
+                                    newPayee.account = account
+                                    payee = newPayee
+//                                    PersistenceController.shared.save() // save the new payee, so that another transaction can use it - otherwise it will get created more than once if more than one transaction has it
+                                }
+                                
+                                // Get the status:
+                                guard let status = tinkTransaction["status"] as? String else {
+                                    // Skip this transaction if it doesn't have a status
+                                    print("Status not found. Skipping")
+                                    continue
+                                }
+                                
+                                // LATER: ALSO GET THE MERCHANT CATEGORY CODE AND NAME, IF THEY ARE PRESENT?
+                                
+                                
+                                
+                                // Create the transaction
+                                print("Creating a transaction: ", providerTransactionId, account.name ?? "", date, currencyCode, intAmount, displayDescription, originalDescription, status)
+                                let transaction = Transaction(context: viewContext)
+                                transaction.populate(account: account, date: date, period: getPeriod(date: date), payee: payee, category: nil, memo: originalDescription, amount: intAmount, amountTo: 0, currency: currencyCode, income: false, transfer: false, toAccount: nil, expense: false, expenseSettled: false, debtor: nil, recurring: false, recurrence: "")
+                            }
+                            
+//                            PersistenceController.shared.save() // save the new transactions
+                        }
+                    } label: {
+                        Label("Get transactions", systemImage: "key")
+                    }
+                    
+                    
                     // Period picker:
                     HStack {
                         previousPeriod
@@ -456,6 +570,12 @@ struct BudgetView: View {
         return formatter
     }()
     
+    private let dateFormatterTink: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        return formatter
+    }()
+    
     private func moveItem(at sets:IndexSet, destination: Int) {
         let itemToMove = sets.first!
         
@@ -524,6 +644,10 @@ struct BudgetView: View {
         PersistenceController.shared.save() // save the item
     }
     
+    // Find the account based on the external id, if it exists:
+    private func matchAccount(externalId: String)  -> Account? {
+        return accounts.first { $0.externalid == externalId }
+    }
 }
 
 struct BudgetView_Previews: PreviewProvider {

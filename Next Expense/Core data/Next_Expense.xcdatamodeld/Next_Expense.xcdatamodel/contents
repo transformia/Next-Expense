@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="21754" systemVersion="22F82" minimumToolsVersion="Automatic" sourceLanguage="Swift" usedWithCloudKit="YES" userDefinedModelVersionIdentifier="">
+<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="21754" systemVersion="22G90" minimumToolsVersion="Automatic" sourceLanguage="Swift" usedWithCloudKit="YES" userDefinedModelVersionIdentifier="">
     <entity name="Account" representedClassName="Account" syncable="YES" codeGenerationType="class">
         <attribute name="balance" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
         <attribute name="currency" optional="YES" attributeType="String"/>
+        <attribute name="externalid" optional="YES" attributeType="String"/>
         <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="name" optional="YES" attributeType="String"/>
         <attribute name="order" optional="YES" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
-        <attribute name="tinkid" optional="YES" attributeType="String"/>
         <attribute name="type" optional="YES" attributeType="String"/>
         <relationship name="payees" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Payee" inverseName="account" inverseEntity="Payee"/>
         <relationship name="transactions" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Transaction" inverseName="account" inverseEntity="Transaction"/>
@@ -75,6 +75,7 @@
         <attribute name="date" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="expense" optional="YES" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
         <attribute name="expensesettled" optional="YES" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
+        <attribute name="externalid" optional="YES" attributeType="String"/>
         <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="income" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
         <attribute name="memo" optional="YES" attributeType="String"/>

@@ -41,6 +41,7 @@
 		4CB1C8FD29AFB3BE00706336 /* TransactionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CB1C8FC29AFB3BE00706336 /* TransactionView.swift */; };
 		4CC1DA6D29005C97000DCA2F /* NumpadView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CC1DA6C29005C97000DCA2F /* NumpadView.swift */; };
 		4CC1DA6F29005CE6000DCA2F /* NumpadKeyView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CC1DA6E29005CE6000DCA2F /* NumpadKeyView.swift */; };
+		4CC583002AA5DD87006DD52D /* TinkService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CC582FF2AA5DD87006DD52D /* TinkService.swift */; };
 		4CDF629228DDEF1E0047C765 /* Next_ExpenseApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CDF629128DDEF1E0047C765 /* Next_ExpenseApp.swift */; };
 		4CDF629428DDEF1E0047C765 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CDF629328DDEF1E0047C765 /* ContentView.swift */; };
 		4CDF629628DDEF200047C765 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 4CDF629528DDEF200047C765 /* Assets.xcassets */; };
@@ -128,6 +129,7 @@
 		4CB1C8FC29AFB3BE00706336 /* TransactionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransactionView.swift; sourceTree = "<group>"; };
 		4CC1DA6C29005C97000DCA2F /* NumpadView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NumpadView.swift; sourceTree = "<group>"; };
 		4CC1DA6E29005CE6000DCA2F /* NumpadKeyView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NumpadKeyView.swift; sourceTree = "<group>"; };
+		4CC582FF2AA5DD87006DD52D /* TinkService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TinkService.swift; sourceTree = "<group>"; };
 		4CDF628E28DDEF1E0047C765 /* Next Expense.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Next Expense.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		4CDF629128DDEF1E0047C765 /* Next_ExpenseApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Next_ExpenseApp.swift; sourceTree = "<group>"; };
 		4CDF629328DDEF1E0047C765 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -305,6 +307,7 @@
 		4CC3A0FF2A9D249E00EC5C50 /* Tink integration */ = {
 			isa = PBXGroup;
 			children = (
+				4CC582FF2AA5DD87006DD52D /* TinkService.swift */,
 				4C3E2F0A2A9F4FBA00D274A3 /* TinkAccountList.swift */,
 			);
 			path = "Tink integration";
@@ -580,6 +583,7 @@
 				4CDF62AE28DDF6FD0047C765 /* TransactionListView.swift in Sources */,
 				4C88A01128FF6DEF00C4584C /* BudgetListView.swift in Sources */,
 				4C5D482028FF550E0042693C /* PeriodListView.swift in Sources */,
+				4CC583002AA5DD87006DD52D /* TinkService.swift in Sources */,
 				4CEDD45228F9A3380041BEEA /* CategoryGroupView.swift in Sources */,
 				4C3CDC9F29A973280078D5C8 /* DebtorView.swift in Sources */,
 				4C1B72A229A7E4D9000E7D68 /* FxRateView.swift in Sources */,

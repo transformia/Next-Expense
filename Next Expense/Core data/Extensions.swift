@@ -9,7 +9,7 @@ import Foundation
 
 extension Transaction {
     
-    func populate(account: Account, date: Date, period: Period, payee: Payee?, category: Category?, memo: String, amount: Int, amountTo: Int, currency: String, income: Bool, transfer: Bool, toAccount: Account?, expense: Bool, expenseSettled: Bool, debtor: Payee?, recurring: Bool, recurrence: String) {
+    func populate(account: Account, date: Date, period: Period, payee: Payee?, category: Category?, memo: String, amount: Int, amountTo: Int, currency: String, income: Bool, transfer: Bool, toAccount: Account?, expense: Bool, expenseSettled: Bool, debtor: Payee?, recurring: Bool, recurrence: String, externalId: String, posted: Bool) {
         if self.id == nil { // if this is a new transaction, create a UUID for it, and set its timestamp
             //            print("Creating a UUID for the transaction")
             self.id = UUID()
@@ -60,16 +60,19 @@ extension Transaction {
         }
         self.recurring = recurring
         self.recurrence = recurrence
+        
+        if externalId != "" { self.externalid = externalId } // to avoid removing the external id when editing the transaction
+        self.posted = posted
     }
     
     // Update the balances of the transaction's account, to account (for today's date) and category (for the selected period)
     func updateBalances(transactionPeriod: Period, selectedPeriod: Period, category: Category?, account: Account, toaccount: Account?) {
-        print("Updating balances based on new or modified transaction: category \(category?.name ?? ""), account \(account.name ?? ""), to account \(toaccount?.name ?? "")")
+//        print("Updating balances based on new or modified transaction: category \(category?.name ?? ""), account \(account.name ?? ""), to account \(toaccount?.name ?? "")")
         
         // Update the category balance and the remaining budget if the transaction is in the selected period, and has a category:
         if transactionPeriod == selectedPeriod && category != nil {
-            category?.calcBalance(period: transactionPeriod) // calculate the balance and store it in the category
-            category?.calcRemainingBudget(selectedPeriod: transactionPeriod) // calculate the remaining budget and store it in the category
+            _ = category?.calcBalance(period: transactionPeriod) // calculate the balance and store it in the category
+            _ = category?.calcRemainingBudget(selectedPeriod: transactionPeriod) // calculate the remaining budget and store it in the category
         }
         // Update the account balance for end of day today if the transaction isn't in the future:
         if Calendar.current.startOfDay(for: self.date ?? Date()) < Date() {
@@ -188,7 +191,7 @@ extension Account {
                 }
             }
         }
-        print("New balance of account \(self.name ?? ""): \(round(balance) / 100)")
+//        print("New balance of account \(self.name ?? ""): \(round(balance) / 100)")
         
         // Save the balance to the account:
         self.balance = round(balance) / 100
@@ -258,8 +261,8 @@ extension Category {
         
         self.remainingbudget = Double(budgetAmountInt) / 100 + round(transactionAmountDoubleNoDecimals) / 100 // save the remaining budget to the category. Rounding it to avoid having anything after the 2nd decimal
         
-        print("Total budgeted amount: \(Double(budgetAmountInt) / 100)")
-        print("Total spent amount: \(round(transactionAmountDoubleNoDecimals) / 100)")
+//        print("Total budgeted amount: \(Double(budgetAmountInt) / 100)")
+//        print("Total spent amount: \(round(transactionAmountDoubleNoDecimals) / 100)")
         
         return Double(budgetAmountInt) / 100 + round(transactionAmountDoubleNoDecimals) / 100 // return the remaining budget, for the places where I need to use it
     }
@@ -276,10 +279,10 @@ extension Period {
     }
     
     func getFxRate(currency1: String, currency2: String) -> Double? {
-        print("Getting the exchange rate from \(currency1) to \(currency2) for \(self.monthString ?? "")")
+//        print("Getting the exchange rate from \(currency1) to \(currency2) for \(self.monthString ?? "")")
         for fxRate in self.fxrates ?? [] {
             if (fxRate as! FxRate).currency1 == currency1 && (fxRate as! FxRate).currency2 == currency2 { // if the exchange rate is found, return it
-                print("Found a rate of \((fxRate as! FxRate).rate)")
+//                print("Found a rate of \((fxRate as! FxRate).rate)")
                 return Double((fxRate as! FxRate).rate)
             }
             else if (fxRate as! FxRate).currency1 == currency2 && (fxRate as! FxRate).currency2 == currency1 { // if the reverse exchange rate is found, return its reverse

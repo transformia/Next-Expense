@@ -47,7 +47,7 @@ struct TransactionDetailView: View {
     // Define variables for the new transactions's attributes:
     @State private var date = Date()
     @State private var recurring = false
-    @State private var recurrence = ""
+    @State private var recurrence = "Monthly"
     @State private var selectedPayee: Payee?
     @State private var selectedDebtor: Payee?
     @State private var selectedAccount: Account?
@@ -91,7 +91,7 @@ struct TransactionDetailView: View {
     let currencies = ["EUR", "SEK"]
     
     // Define available recurrences:
-    let recurrences = ["Monthly"]
+    let recurrences = ["Monthly", "Yearly"]
     
     let defaultCurrency = UserDefaults.standard.string(forKey: "DefaultCurrency") ?? "EUR"
     
@@ -191,7 +191,7 @@ struct TransactionDetailView: View {
                                         //                                }
                                         payeeFocused = false // in case the payee field is selected, remove focus from it so that the keyboard closes
                                     }
-                                    .onChange(of: amount.showNumpad) { _ in
+                                    .onChange(of: amount.showNumpad) {
                                         if !amount.showNumpad && selectedPayee == nil && !transfer { // when I hide the numpad, focus on the payee to open the keyboard if there is no payee selected yet, and this is not a transfer
                                             payeeFocused = true
                                         }
@@ -217,7 +217,7 @@ struct TransactionDetailView: View {
                                             //                                }
                                             payeeFocused = false // in case the payee field is selected, remove focus from it so that the keyboard closes
                                         }
-                                        .onChange(of: amount.showNumpad) { _ in
+                                        .onChange(of: amount.showNumpad) {
                                             if !amount.showNumpad && selectedPayee == nil && !transfer { // when I hide the numpad, focus on the payee to open the keyboard if there is no payee selected yet, and this is not a transfer
                                                 payeeFocused = true
                                             }
@@ -280,7 +280,7 @@ struct TransactionDetailView: View {
                                             .tag(category as Category?)
                                     }
                                 }
-                                .onChange(of: selectedCategory) { _ in
+                                .onChange(of: selectedCategory) {
                                     if !transfer {
                                         income = selectedCategory?.type == "Income" ? true : false
                                     }
@@ -293,7 +293,7 @@ struct TransactionDetailView: View {
                                         .tag(account as Account?)
                                 }
                             }
-                            .onChange(of: selectedAccount) { _ in
+                            .onChange(of: selectedAccount) {
                                 currency = selectedAccount?.currency ?? "EUR" // set the currency to the currency of the selected account
                                 
                                 // If I have selected the same account as the to account, change the to account to another account with the same currency, if there is one:
@@ -344,7 +344,7 @@ struct TransactionDetailView: View {
                                 }
                                 
                                 Toggle("Transfer", isOn: $transfer)
-                                    .onChange(of: transfer) { _ in
+                                    .onChange(of: transfer) {
                                         if transfer {
                                             income = false
                                         }
@@ -614,7 +614,7 @@ struct TransactionDetailView: View {
                     
                     // Update the category balance if the transaction is in the selected period, and has a category:
                     if oldPeriod == selectedPeriod.period && oldCategory != nil {
-                        oldCategory?.calcBalance(period: oldPeriod) // calculate the balance and store it in the category
+                        _ = oldCategory?.calcBalance(period: oldPeriod) // calculate the balance and store it in the category
                     }
                     
                     // Update the account balance for end of day today if the transaction isn't in the future:
@@ -729,10 +729,18 @@ struct TransactionDetailView: View {
             if transaction == nil && recurring && date < Date() {
                 let transaction = Transaction(context: viewContext)
                 
-                let nextRecurrenceDate = Calendar.current.date(byAdding: .month, value: 1, to: date) // increment the recurring transaction's date by one recurrence period
-                let period = getPeriod(date: nextRecurrenceDate ?? Date())
+                // Increment the recurring transaction's date by one recurrence period:
+                var nextRecurrenceDate = Date()
+                if recurrence == "Monthly" {
+                    nextRecurrenceDate = Calendar.current.date(byAdding: .month, value: 1, to: date) ?? Date()
+                }
+                else if recurrence == "Yearly" {
+                    nextRecurrenceDate = Calendar.current.date(byAdding: .year, value: 1, to: date) ?? Date()
+                }
                 
-                transaction.populate(account: selectedAccount ?? Account(), date: nextRecurrenceDate ?? Date(), period: period, payee: selectedPayee, category: selectedCategory, memo: memo, amount: amount.intAmount, amountTo: amount.intAmountTo, currency: currency, income: income, transfer: transfer, toAccount: selectedToAccount, expense: expense, expenseSettled: expenseSettled, debtor: selectedDebtor, recurring: recurring, recurrence: recurrence)
+                let period = getPeriod(date: nextRecurrenceDate)
+                
+                transaction.populate(account: selectedAccount ?? Account(), date: nextRecurrenceDate, period: period, payee: selectedPayee, category: selectedCategory, memo: memo, amount: amount.intAmount, amountTo: amount.intAmountTo, currency: currency, income: income, transfer: transfer, toAccount: selectedToAccount, expense: expense, expenseSettled: expenseSettled, debtor: selectedDebtor, recurring: recurring, recurrence: recurrence, externalId: "", posted: true)
                 
                 // Update the category, account(s) and period balances based on the new transaction:
                 transaction.updateBalances(transactionPeriod: getPeriod(date: date), selectedPeriod: selectedPeriod.period, category: selectedCategory, account: selectedAccount ?? Account(), toaccount: selectedToAccount)
@@ -742,7 +750,7 @@ struct TransactionDetailView: View {
                 let transaction2 = Transaction(context: viewContext)
                 let period2 = getPeriod(date: date)
                 
-                transaction2.populate(account: selectedAccount ?? Account(), date: date, period: period2, payee: selectedPayee, category: selectedCategory, memo: memo, amount: amount.intAmount, amountTo: amount.intAmountTo, currency: currency, income: income, transfer: transfer, toAccount: selectedToAccount, expense: expense, expenseSettled: expenseSettled, debtor: selectedDebtor, recurring: false, recurrence: "")
+                transaction2.populate(account: selectedAccount ?? Account(), date: date, period: period2, payee: selectedPayee, category: selectedCategory, memo: memo, amount: amount.intAmount, amountTo: amount.intAmountTo, currency: currency, income: income, transfer: transfer, toAccount: selectedToAccount, expense: expense, expenseSettled: expenseSettled, debtor: selectedDebtor, recurring: false, recurrence: "", externalId: "", posted: true)
                 
                 // Update the category, account(s) and period balances based on the new transaction:
                 transaction2.updateBalances(transactionPeriod: getPeriod(date: date), selectedPeriod: selectedPeriod.period, category: selectedCategory, account: selectedAccount ?? Account(), toaccount: selectedToAccount)
@@ -756,7 +764,7 @@ struct TransactionDetailView: View {
                     
                     let period = getPeriod(date: date)
                     
-                    transaction.populate(account: selectedAccount ?? Account(), date: date, period: period, payee: selectedPayee, category: selectedCategory, memo: memo, amount: amount.intAmount, amountTo: amount.intAmountTo, currency: currency, income: income, transfer: transfer, toAccount: selectedToAccount, expense: expense, expenseSettled: expenseSettled, debtor: selectedDebtor, recurring: recurring, recurrence: recurrence)
+                    transaction.populate(account: selectedAccount ?? Account(), date: date, period: period, payee: selectedPayee, category: selectedCategory, memo: memo, amount: amount.intAmount, amountTo: amount.intAmountTo, currency: currency, income: income, transfer: transfer, toAccount: selectedToAccount, expense: expense, expenseSettled: expenseSettled, debtor: selectedDebtor, recurring: recurring, recurrence: recurrence, externalId: "", posted: true)
                     
                     // Update the category, account(s) and period balances based on the new transaction:
                     transaction.updateBalances(transactionPeriod: getPeriod(date: date), selectedPeriod: selectedPeriod.period, category: selectedCategory, account: selectedAccount ?? Account(), toaccount: selectedToAccount)
@@ -765,7 +773,7 @@ struct TransactionDetailView: View {
                 else { // else if this is an existing transaction, populate it
                     let period = getPeriod(date: date)
                     
-                    transaction?.populate(account: selectedAccount ?? Account(), date: date, period: period, payee: selectedPayee, category: selectedCategory, memo: memo, amount: amount.intAmount, amountTo: amount.intAmountTo, currency: currency, income: income, transfer: transfer, toAccount: selectedToAccount, expense: expense, expenseSettled: expenseSettled, debtor: selectedDebtor, recurring: recurring, recurrence: recurrence)
+                    transaction?.populate(account: selectedAccount ?? Account(), date: date, period: period, payee: selectedPayee, category: selectedCategory, memo: memo, amount: amount.intAmount, amountTo: amount.intAmountTo, currency: currency, income: income, transfer: transfer, toAccount: selectedToAccount, expense: expense, expenseSettled: expenseSettled, debtor: selectedDebtor, recurring: recurring, recurrence: recurrence, externalId: "", posted: true)
                     
                     // Update the category, account(s) and period balances based on the new transaction:
                     transaction?.updateBalances(transactionPeriod: getPeriod(date: date), selectedPeriod: selectedPeriod.period, category: selectedCategory, account: selectedAccount ?? Account(), toaccount: selectedToAccount)

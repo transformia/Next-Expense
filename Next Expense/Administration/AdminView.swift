@@ -30,11 +30,17 @@ struct AdminView: View {
         animation: .default)
     private var categoryGroups: FetchedResults<CategoryGroup>
     
+    @FetchRequest(
+        sortDescriptors: [NSSortDescriptor(keyPath: \Payee.order, ascending: true)],
+        animation: .default)
+    private var payees: FetchedResults<Payee>
+    
     @State private var transactionCount = 0
     
     @State private var showingClearTransactionsAlert = false
     @State private var showingClearPeriodsAlert = false
     @State private var showingClearCategoriesAlert = false
+    @State private var showingClearPayeesAlert = false
     
     var body: some View {
         VStack {
@@ -88,6 +94,24 @@ struct AdminView: View {
 //            } label: {
 //                Label("Clear transactions", systemImage: "xmark.circle.fill")
 //            }
+            
+            Button {
+                showingClearPayeesAlert = true
+                
+            } label: {
+                Label("Clear ALL payees", systemImage: "xmark.circle.fill")
+            }
+            .alert(isPresented:$showingClearPayeesAlert) {
+                Alert(
+                    title: Text("Are you sure you want to delete all payees?"),
+                    message: Text("This cannot be undone"),
+                    primaryButton: .destructive(Text("Delete")) {
+                        clearAllPayees()
+                    },
+                    secondaryButton: .cancel()
+                )
+            }
+            .padding()
             
             Button {
                 showingClearTransactionsAlert = true
@@ -146,6 +170,16 @@ struct AdminView: View {
         if(transactions.count > 0) {
             for i in 0 ... transactions.count - 1 {
                 viewContext.delete(transactions[i])
+            }
+            PersistenceController.shared.save() // save the changes
+        }
+    }
+    
+    func clearAllPayees() {
+        print("Clearing all payees")
+        if(payees.count > 0) {
+            for i in 0 ... payees.count - 1 {
+                viewContext.delete(payees[i])
             }
             PersistenceController.shared.save() // save the changes
         }

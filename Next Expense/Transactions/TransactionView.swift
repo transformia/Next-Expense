@@ -17,14 +17,31 @@ struct TransactionView: View {
     
     let transaction: Transaction
     let account: Account? // if the TransactionListView is called from an account, this will contain that account
-    
+        
     @State private var showingTransactionDetailView = false
+    @State private var showErrorListView = false
     
     var body: some View {
         HStack {
             VStack {
                 HStack {
+                    if !transaction.transfer && transaction.category == nil {
+                        Image(systemName: "exclamationmark.circle")
+                        .foregroundColor(.red)
+                        .onTapGesture {
+                            showErrorListView = true
+                        }
+                    }
+                    if !transaction.posted {
+                        Button {
+                            
+                        } label: {
+                            Image(systemName: "pencil.circle")
+                        }
+                        .foregroundColor(.blue)
+                    }
                     if(transaction.recurring) {
+                        Text(transaction.recurrence == "Monthly" ? "M" : "Y")
                         Image(systemName: "arrow.counterclockwise")
                     }
                     Text(transaction.date ?? Date(), formatter: dateFormatter)
@@ -112,6 +129,9 @@ struct TransactionView: View {
         .sheet(isPresented: $showingTransactionDetailView) {
 //            TransactionDetailView(transaction: transaction)
             TransactionDetailView(transaction: transaction, payee: nil, account: nil, category: nil)
+        }
+        .sheet(isPresented: $showErrorListView) {
+            ErrorListView()
         }
     }
     

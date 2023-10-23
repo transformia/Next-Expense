@@ -25,6 +25,16 @@ struct AccountDetailView: View {
         animation: .default)
     private var periods: FetchedResults<Period> // to determine the period of the reconciliation transaction
     
+    @FetchRequest(
+        sortDescriptors: [NSSortDescriptor(keyPath: \Account.order, ascending: true)],
+        animation: .default)
+    private var accounts: FetchedResults<Account> // to be able to import only transactions corresponding to this account
+    
+    @FetchRequest(
+        sortDescriptors: [NSSortDescriptor(keyPath: \Payee.name, ascending: true)],
+        animation: .default)
+    private var payees: FetchedResults<Payee> // to be able to find the payee corresponding to a string
+    
     @EnvironmentObject var selectedPeriod: ContentView.SelectedPeriod // get the selected period from the environment
     
     @Environment(\.dismiss) private var dismiss // used for dismissing this view
@@ -32,7 +42,7 @@ struct AccountDetailView: View {
     let account: Account // element to display
     
     @State private var name = ""
-    @State private var type = "Budget" // tells us the type of the category    
+    @State private var type = "Budget" // tells us the type of the category
     
     @State private var addTransactionView = false // determines whether the view for adding elements is displayed or not
     
@@ -58,8 +68,8 @@ struct AccountDetailView: View {
 //    @State private var clientAccessToken = ""
 //    @State private var userAccessToken = ""
     
-    @State private var accountInfo: [(String, String, String, Int)] = []
-    @State private var showAccountList = false
+    @State private var showAccountIntegrationView = false
+    
     
     var body: some View {
         VStack {
@@ -106,178 +116,40 @@ struct AccountDetailView: View {
                     .font(.headline)
                     .foregroundColor(.blue)
                     .onAppear {
-                        accountBalance.intAmount = Int(account.balance * 100) // set the reconciliation balance to the account's balance
+                        accountBalance.intAmount = Int(account.reconciledbalance) // set the reconciliation balance to the latest reconciled balance
+//                        accountBalance.intAmount = Int(account.balance * 100) // set the reconciliation balance to the account's balance
                     }
-                    .onTapGesture {
-                        accountBalance.showNumpad.toggle()
-                    }
-                    .onChange(of: account.balance) { _ in
+                    /* Doesn't work:
+                     .onChange(of: account.reconciledbalance) { _ in
+                        print("Plop")
+                        accountBalance.intAmount = Int(account.reconciledbalance) // update the reconciled balance when I write it on the account in getAccountInfo()
+                    }*/
+                    /*.onChange(of: account.balance) { _ in
                         accountBalance.intAmount = Int(account.balance * 100)
-                    } // when the account balance changes because a transaction has been modified, also update the reconciliation balance so that it doesn't think that there is suddenly a reconciliation difference
+                    } // when the account balance changes because a transaction has been modified, also update the reconciliation balance so that it doesn't think that there is suddenly a reconciliation difference*/
             }
             
-//            Text("Tink account id: " + (account.externalid ?? ""))
             
-            Group {
+            HStack {
                 
-                Button {
-                    TinkService.shared.newUser() { success, tinkLinkURL in
-                        print("Tink Link generated")
-//                        print(tinkLinkURL ?? "")
+                Image(systemName: "arrow.clockwise")
+                    .foregroundColor(.blue)
+                    .onTapGesture {
+                        showAccountIntegrationView = true
                     }
-                } label: {
-                    Label("Create user", systemImage: "key")
-                }
                 
-                Button {
-                    TinkService.shared.giveAccess() { success, tinkLinkURL in
-                        if success {
-                            //                        print(tinkLinkURL ?? "")
-                            openURL(URL(string: tinkLinkURL!)!)
-                        }
-                        else {
-                            print("Tink link wan't generated")
-                        }
-                    }
-                } label: {
-                    Label("Grant user access", systemImage: "key")
-                }
-                .onOpenURL { incomingURL in
-                    handleTinkLinkCallback(incomingURL: incomingURL)
-                }
+                Text("Reconciled balance")
+                    .font(.headline)
                 
-                Button {
-                    TinkService.shared.authorizeApp(scope: "authorization:grant") { success, clientAccessToken in
-                        if success {
-                            TinkService.shared.getUserAccessToken()
-                        }
-                    }
-                } label: {
-                    Label("Get client then user access token", systemImage: "key")
-                }
-                
-                /*Button {
-                    TinkService.shared.authorizeApp(scope: "authorization:grant") { success, clientAccessToken in
-//                        print(clientAccessToken ?? "")
-                    }
-                } label: {
-                    Label("Get client access token", systemImage: "key")
-                }
-                
-                Button {
-                    TinkService.shared.getUserAccessToken()
-                } label: {
-                    Label("Get user access token", systemImage: "key")
-                }*/
-                
-                Button {
-                    linkAccount()
-                } label: {
-                    Label("Link account", systemImage: "key")
-                }
-                .sheet(isPresented: $showAccountList) {
-                    TinkAccountList(account: account, accountInfo: accountInfo, balance: accountBalance)
-                }
+                Text(Double(accountBalance.intAmount) / 100, format: .currency(code: account.currency ?? "EUR"))
+                    .font(.headline)
+                    .foregroundColor(.green)
             }
-            
-            /*Group {
-                
-                Button {
-                    authorizeApp(scope: "user:create")
-                } label: {
-                    Label("Authorize app", systemImage: "key")
-                }
-                
-                Button {
-                    createUser()
-                } label: {
-                    Label("Create user", systemImage: "key")
-                }
-                
-                Button {
-                    authorizeApp(scope: "authorization:grant")
-                } label: {
-                    Label("Authorize app", systemImage: "key")
-                }
-                
-                Button {
-                    grantUserAccess()
-                } label: {
-                    Label("Grant user access", systemImage: "key")
-                }
-                .onOpenURL { incomingURL in
-                    handleTinkLinkCallback(incomingURL: incomingURL)
-                }
-                
-                Button {
-                    getUserAccessCode()
-                } label: {
-                    Label("Get user access code then tokens", systemImage: "key")
-                }
-                
-                Button {
-                    getAccountList()
-                } label: {
-                    Label("Link account", systemImage: "key")
-                }
-                .sheet(isPresented: $showAccountList) {
-                    TinkAccountList(account: account, accountInfo: accountInfo, balance: accountBalance)
-                }
-                
-                Button {
-                    getAccountBalance()
-                } label: {
-                    Label("Get account balance", systemImage: "key")
-                }
-            }*/
-            
-            /*Button {
-                openTinkLink()
-            } label: {
-                Label("Authenticate with Tink", systemImage: "key")
+            .onTapGesture {
+                accountBalance.showNumpad.toggle()
             }
-            .onOpenURL { incomingURL in
-                handleTinkLinkCallback(incomingURL: incomingURL)
-            }
-            
-            
-//            Text("Tink code: \(tinkCode)")
-            
-            
-            Button {
-                getTinkAccessToken()
-            } label: {
-                Label("Exchange code for access token", systemImage: "key")
-            }
-                
-            
-            Button {
-                getAccountList()
-            } label: {
-                Label("Get account list", systemImage: "dollarsign")
-            }
-            .sheet(isPresented: $showAccountList) {
-                TinkAccountList(account: account, accountInfo: accountInfo, balance: accountBalance)
-            }
-            
-//            if account.externalid != nil {
-//                Button {
-//                    getAccountBalance()
-//                } label: {
-//                    Label("Get balance", systemImage: "dollarsign")
-//                }
-//            }*/
-            
             
             if(Double(accountBalance.intAmount) / 100 != account.balance) {
-                HStack {
-                    Text("Reconciliation balance")
-                        .font(.headline)
-                    
-                    Text(Double(accountBalance.intAmount) / 100, format: .currency(code: account.currency ?? "EUR"))
-                        .font(.headline)
-                        .foregroundColor(.green)
-                }
                 HStack {
                     Text("Difference: ")
                     Text(((Double(accountBalance.intAmount) / 100 - account.balance)), format: .currency(code: account.currency ?? "EUR"))
@@ -296,7 +168,7 @@ struct AccountDetailView: View {
                         print("Reconciling with a difference of \(( Double(accountBalance.intAmount) / 100 - account.balance ))")
                         let transaction = Transaction(context: viewContext)
                             
-                        transaction.populate(account: account, date: Date(), period: getPeriod(date: Date()), payee: nil, category: selectedCategory, memo: "Reconciliation difference", amount: Int(abs((Double(accountBalance.intAmount) - account.balance * 100))), amountTo: 0, currency: account.currency ?? "EUR", income: Double(accountBalance.intAmount) - account.balance * 100 > 0 ? true : false, transfer: false, toAccount: nil, expense: false, expenseSettled: false, debtor: nil, recurring: false, recurrence: "")
+                        transaction.populate(account: account, date: Date(), period: getPeriod(date: Date()), payee: nil, category: selectedCategory, memo: "Reconciliation difference", amount: Int(abs((Double(accountBalance.intAmount) - account.balance * 100))), amountTo: 0, currency: account.currency ?? "EUR", income: Double(accountBalance.intAmount) - account.balance * 100 > 0 ? true : false, transfer: false, toAccount: nil, expense: false, expenseSettled: false, debtor: nil, recurring: false, recurrence: "", externalId: "", posted: true)
                         
                         // Update the category, account(s) and period balances based on the new transaction:
                         transaction.updateBalances(transactionPeriod: transaction.period ?? Period(), selectedPeriod: selectedPeriod.period, category: selectedCategory, account: account, toaccount: nil)
@@ -317,6 +189,11 @@ struct AccountDetailView: View {
                     .tint(.green)
                 }
             }
+            
+            
+//            Button("Tink integration", action: {showAccountIntegrationView = true})
+            
+            
             
             // Show button to delete the account if it has no transactions:
             if transactions.filter({$0.account == account || $0.toaccount == account}).count == 0 {
@@ -360,6 +237,9 @@ struct AccountDetailView: View {
             NumpadView(amount: accountBalance)
                 .presentationDetents([.height(300)])
         }
+        .sheet(isPresented: $showAccountIntegrationView) {
+            AccountIntegrationView(account: account)
+        }
     }
     
     var deleteButton: some View {
@@ -398,30 +278,117 @@ struct AccountDetailView: View {
         return Period() // if no period is found, return a new one
     }
     
-    private func handleTinkLinkCallback(incomingURL: URL) {
-        print("App was opened via URL: \(incomingURL)")
-        guard incomingURL.scheme == "nextexpenseapp" else {
-            print("Invalid URL scheme")
-            return
-        }
-        guard let components = URLComponents(url: incomingURL, resolvingAgainstBaseURL: true) else {
-            print("Invalid URL")
-            return
-        }
+    private let dateTimeFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "MMM d hh:mm:ss"
+        return formatter
+    }()
+    
+    
+    
+    
+    
+    /*// Send the user access token, get the transactions for this account:
+    private func getAccountTransactions() {
+        print("Fetching transactions for account \(account.externalid ?? "")")
+        let url = URL(string: "https://api.tink.com/data/v2/transactions")!
         
-        guard let state = components.queryItems?.first(where: { $0.name == "state" })?.value else {
-            print("State not found")
-            return
-        }
+        let header = ["Authorization": "Bearer \(tinkAccessToken)"]
         
-        if state == "MyStateCode" {
-            print("User access granted")
-        }
-        else {
-            print("Invalid state code")
-            return
-        }
-    }
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        request.allHTTPHeaderFields = header
+        
+        URLSession.shared.dataTask(with: request) { (data, response, error) in
+            guard error == nil else {
+                print(error!.localizedDescription)
+                return
+            }
+            guard let data = data else {
+                print("Empty data")
+                return
+            }
+
+            do {
+                if let jsonData = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any] {
+                    print("Data:")
+                    print(jsonData)
+                    
+                    if let accounts = jsonData["accounts"] as? [[String: Any]] {
+                        print("Account list:")
+                        print(accounts)
+                        
+                        accountInfo = accounts.compactMap { account in
+                            guard
+                                let name = account["name"] as? String,
+                                let id = account["id"] as? String,
+                                let type = account["type"] as? String,
+                                let balances = account["balances"] as? [String: Any],
+                                let booked = balances["booked"] as? [String: Any],
+                                let amount = booked["amount"] as? [String: Any],
+                                let unscaledValueString = amount["value"] as? [String: Any],
+                                let unscaledValue = unscaledValueString["unscaledValue"] as? String,
+                                let balance = Int(unscaledValue)
+                            else {
+                                return nil
+                            }
+                            return (name: name, id: id, type: type, balance: balance)
+                        }
+                        print("Account info:")
+                        print(accountInfo)
+                        
+                        // If account information is found in Tink that matches this account's external id, get the balance
+                        if let thisAccountInfo = accountInfo.first(where: {$0.1 == account.externalid}) {
+                            accountBalance.intAmount = thisAccountInfo.3
+                        }
+                        // Else show the account list so that I can link an account to this one:
+                        else {
+                            print("This account's id wasn't found: \(account.externalid ?? "")")
+                            showAccountList = true
+                        }
+                        
+                    } else {
+                        print("No account information found")
+                    }
+                } else {
+                    print("Error decoding JSON")
+                }
+            } catch {
+                print("Error decoding JSON:", error)
+            }
+            
+        }.resume()
+    }*/
+    
+    
+    
+    
+    
+    // Continuous access version?:
+//    private func handleTinkLinkCallback(incomingURL: URL) {
+//        print("App was opened via URL: \(incomingURL)")
+//        guard incomingURL.scheme == "nextexpenseapp" else {
+//            print("Invalid URL scheme")
+//            return
+//        }
+//        guard let components = URLComponents(url: incomingURL, resolvingAgainstBaseURL: true) else {
+//            print("Invalid URL")
+//            return
+//        }
+//        
+//        guard let state = components.queryItems?.first(where: { $0.name == "state" })?.value else {
+//            print("State not found")
+//            return
+//        }
+//        
+//        if state == "MyStateCode" {
+//            print("User access granted")
+//        }
+//        else {
+//            print("Invalid state code")
+//            return
+//        }
+//    }
     
     /*
     private func authorizeApp(scope: String) {
@@ -702,11 +669,11 @@ struct AccountDetailView: View {
     }*/
     
     // Send the user access token, get the list of accounts, display it. Tap on an account to get its balance and its id, store the id on the account, and put the balance in the account reconciliation balance:
-    private func linkAccount() {
+    /*private func getAccountInfo() {
         print("Fetching account list")
         let url = URL(string: "https://api.tink.com/data/v2/accounts")!
         
-        let header = ["Authorization": "Bearer \(TinkService.shared.userAccessToken)"]
+        let header = ["Authorization": "Bearer \(UserDefaults.standard.string(forKey: "UserAccessToken") ?? TinkService.shared.userAccessToken)"]
         
 //        print("User access token:")
 //        print(TinkService.shared.userAccessToken)
@@ -753,7 +720,15 @@ struct AccountDetailView: View {
                         print("Account info:")
                         print(accountInfo)
                         
-                        showAccountList = true
+                        // If account information is found in Tink that matches this account's external id, get the balance
+                        if let thisAccountInfo = accountInfo.first(where: {$0.1 == account.externalid}) {
+                            accountBalance.intAmount = thisAccountInfo.3
+                        }
+                        // Else show the account list so that I can link an account to this one:
+                        else {
+                            print("This account's id wasn't found: \(account.externalid ?? "")")
+                            showAccountList = true
+                        }
                         
                     } else {
                         print("No account information found")
@@ -766,10 +741,10 @@ struct AccountDetailView: View {
             }
             
         }.resume()
-    }
+    }*/
     
     // Send the account id and the user access token, and get the account balance?:
-    private func getAccountBalance() {
+    /*private func getAccountBalance() {
         if account.externalid != nil {
             print("Getting account balance")
             let url = URL(string: "https://api.tink.com/data/v2/accounts/\(account.externalid ?? "")/balances")!
@@ -824,72 +799,6 @@ struct AccountDetailView: View {
                 
             }.resume()
         }
-    }
-    
-    /*private func openTinkLink() {
-        // Guide: https://docs.tink.com/resources/transactions/connect-to-a-bank-account
-        
-        // Sandbox - Transactions:
-        openURL(URL(string: "https://link.tink.com/1.0/transactions/connect-accounts/?client_id=408dcac9914442a1b875da8e10f7a487&redirect_uri=nextexpenseapp%3A%2F%2F&market=SE&locale=en_US")!)
-        
-        // Real world Sweden - Transactions - also gives access to accounts??:
-//        openURL(URL(string: "https://link.tink.com/1.0/transactions/connect-accounts/?client_id=dd0e0e14037347a8b9a003b869c4de87&redirect_uri=nextexpenseapp%3A%2F%2F&market=SE&locale=en_US")!)
-        
-        // Real world Sweden - Handelsbanken - Account check:
-//        openURL(URL(string: "https://link.tink.com/1.0/account-check/?client_id=dd0e0e14037347a8b9a003b869c4de87&redirect_uri=nextexpenseapp%3A%2F%2F&market=SE&locale=en_US&input_provider=handelsbanken-bankid&input_username=198406227432")!)
-        
-        
-        // Demo bank Sweden - account check?? - doesn't work:
-//        openURL(URL(string: "https://link.tink.com/1.0/account-check/?client_id=dd0e0e14037347a8b9a003b869c4de87&redirect_uri=https%3A%2F%2Fconsole.tink.com%2Fcallback&market=SE&locale=en_US&input_provider=se-demobank-password&input_username=u27678322")!)
-    }
-    
-    private func getTinkAccessToken() { // exchange the code obtained in the callback url for an access token
-        let clientID = "408dcac9914442a1b875da8e10f7a487" // sandbox
-        let clientSecret = "79a3313907fd46a193f9b0a196b14bfa" // sandbox
-//        let clientID = "dd0e0e14037347a8b9a003b869c4de87" // production
-//        let clientSecret = "4b4393da30d34e7c98f5966c13be504d" // production
-                
-        let url = URL(string: "https://api.tink.com/api/v1/oauth/token")!
-        
-        let data = NSMutableData(data: "code=\(tinkCode)".data(using: .utf8)!)
-        data.append("&client_id=\(clientID)".data(using: .utf8)!)
-        data.append("&client_secret=\(clientSecret)".data(using: .utf8)!)
-        data.append("&grant_type=authorization_code".data(using: .utf8)!)
-        
-        let header = ["Content-Type": "application/x-www-form-urlencoded"]
-        
-        var request = URLRequest(url: url)
-        request.httpMethod = "POST"
-        request.allHTTPHeaderFields = header
-        request.httpBody = data as Data
-        
-        URLSession.shared.dataTask(with: request) { (data, response, error) in
-            guard error == nil else {
-                print(error!.localizedDescription)
-                return
-            }
-            guard let data = data else {
-                print("Empty data")
-                return
-            }
-            
-            do {
-                if let jsonData = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any] {
-                    if let accessToken = jsonData["access_token"] as? String {
-                        print("Access Token:", accessToken)
-                        tinkAccessToken = accessToken
-                    } else {
-                        print("Error: Access token not found in JSON")
-                        print(jsonData)
-                    }
-                } else {
-                    print("Error decoding JSON")
-                }
-            } catch {
-                print("Error decoding JSON:", error)
-            }
-            
-        }.resume()
     }*/
 }
 

@@ -254,7 +254,7 @@ struct CSVExportView: View {
             let transaction = Transaction(context: viewContext)
             let period = getPeriod(date: date ?? Date())
                 
-            transaction.populate(account: account ?? Account(), date: date ?? Date(), period: period, payee: payee, category: category, memo: memo, amount: Int(amount) ?? 0, amountTo: 0, currency: currency, income: income, transfer: transfer, toAccount: toAccount, expense: expense, expenseSettled: expenseSettled, debtor: debtor, recurring: recurring, recurrence: recurrence)
+            transaction.populate(account: account ?? Account(), date: date ?? Date(), period: period, payee: payee, category: category, memo: memo, amount: Int(amount) ?? 0, amountTo: 0, currency: currency, income: income, transfer: transfer, toAccount: toAccount, expense: expense, expenseSettled: expenseSettled, debtor: debtor, recurring: recurring, recurrence: recurrence, externalId: "", posted: true)
             
 //            transaction.id = UUID()
 //            transaction.timestamp = Date()

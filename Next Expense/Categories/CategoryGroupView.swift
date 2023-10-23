@@ -51,16 +51,16 @@ struct CategoryGroupView: View {
                     .onAppear {
                         updateCategoryGroupTotals()
                     }
-                    .onChange(of: periodBalances.expensesActual) { _ in
+                    .onChange(of: periodBalances.expensesActual) {
                         updateCategoryGroupTotals()
                     }
-                    .onChange(of: periodBalances.incomeActual) { _ in
+                    .onChange(of: periodBalances.incomeActual) {
                         updateCategoryGroupTotals()
                     }
-                    .onChange(of: periodBalances.expensesBudget) { _ in
+                    .onChange(of: periodBalances.expensesBudget) {
                         updateCategoryGroupTotals()
                     }
-                    .onChange(of: periodBalances.incomeBudget) { _ in
+                    .onChange(of: periodBalances.incomeBudget) {
                         updateCategoryGroupTotals()
                     }
                 

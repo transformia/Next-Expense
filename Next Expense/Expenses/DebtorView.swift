@@ -66,7 +66,7 @@ struct DebtorView: View {
                     .onAppear {
                         selectedAccount = accounts[0]
                     }
-                    .onChange(of: selectedAccount) { _ in // if I switch to an account that does not have the default currency, calculate the amount by taking the current debt amount and converting it into the new account's currency
+                    .onChange(of: selectedAccount) { // if I switch to an account that does not have the default currency, calculate the amount by taking the current debt amount and converting it into the new account's currency
                         let defaultCurrency = UserDefaults.standard.string(forKey: "DefaultCurrency") ?? "EUR"
                         if selectedAccount?.currency != defaultCurrency {
                             if let fxRate = getPeriod(date: date).getFxRate(currency1: selectedAccount?.currency ?? "", currency2: defaultCurrency) {
@@ -87,7 +87,7 @@ struct DebtorView: View {
                                 
                                 let period = getPeriod(date: date)
                                 
-                                transaction.populate(account: selectedAccount ?? Account(), date: date, period: period, payee: payee, category: nil, memo: "Debt reimbursement", amount: settleAmount.intAmount, amountTo: 0, currency: (selectedAccount?.currency ?? UserDefaults.standard.string(forKey: "DefaultCurrency")) ?? "EUR", income: true, transfer: false, toAccount: nil, expense: true, expenseSettled: true, debtor: payee, recurring: false, recurrence: "")
+                                transaction.populate(account: selectedAccount ?? Account(), date: date, period: period, payee: payee, category: nil, memo: "Debt reimbursement", amount: settleAmount.intAmount, amountTo: 0, currency: (selectedAccount?.currency ?? UserDefaults.standard.string(forKey: "DefaultCurrency")) ?? "EUR", income: true, transfer: false, toAccount: nil, expense: true, expenseSettled: true, debtor: payee, recurring: false, recurrence: "", externalId: "", posted: true)
                                 
                                 // Settle all of the debts of this debtor:
                                 for transaction in payee.debttranssactions ?? [] {

@@ -52,8 +52,8 @@ struct CategoryView: View {
                     categoryBudget.intAmount = Int(category.budget * 100)
 //                    categoryBudget.intAmount = category.getBudget(period: selectedPeriod.period)
                 }
-                .onChange(of: selectedPeriod.period) { _ in
-                    category.getBudget(period: selectedPeriod.period) // recalculate the monthly budget balances when I switch periods
+                .onChange(of: selectedPeriod.period) {
+                    _ = category.getBudget(period: selectedPeriod.period) // recalculate the monthly budget balances when I switch periods
 //                    category.budget = Double(category.getBudget(period: selectedPeriod.period) / 100) // recalculate the monthly budget balances when I switch periods
                     PersistenceController.shared.save()
 //                    categoryBudget.intAmount = category.getBudget(period: selectedPeriod.period) // recalculate the monthly budget balances when I switch periods
@@ -74,7 +74,7 @@ struct CategoryView: View {
                 .onTapGesture {
                     categoryBudget.showNumpad.toggle()
                 }
-                .onChange(of: categoryBudget.showNumpad) { _ in
+                .onChange(of: categoryBudget.showNumpad) {
                     if categoryBudget.showNumpad == false { // save the category budget when I close the numpad
                         saveBudget()
                     }
@@ -134,9 +134,9 @@ struct CategoryView: View {
         }
         .sheet(isPresented: $showCategoryReportingView, onDismiss: {
             // When dismissing the reporting view, recalculate the selected period's balances:
-            category.calcBalance(period: selectedPeriod.period)
-            category.getBudget(period: selectedPeriod.period)
-            category.calcRemainingBudget(selectedPeriod: selectedPeriod.period)
+            _ = category.calcBalance(period: selectedPeriod.period)
+            _ = category.getBudget(period: selectedPeriod.period)
+            _ = category.calcRemainingBudget(selectedPeriod: selectedPeriod.period)
         }) {
             CategoryReportingView(category: category)
         }
@@ -183,7 +183,7 @@ struct CategoryView: View {
     
     var budgetToLastMonth: some View {
         Button {
-            category.getBudget(period: previousPeriod() ?? Period()) // update the budget on the category
+            _ = category.getBudget(period: previousPeriod() ?? Period()) // update the budget on the category
             
             categoryBudget.intAmount = Int(category.budget * 100)
             
@@ -207,7 +207,7 @@ struct CategoryView: View {
                     (budget as! Budget).amount = Int64(categoryBudget.intAmount) // update the budget
                     
                     // Update the remaining budget:
-                    category.calcRemainingBudget(selectedPeriod: selectedPeriod.period)
+                    _ = category.calcRemainingBudget(selectedPeriod: selectedPeriod.period)
                     
                     PersistenceController.shared.save() // save the changes
                     
@@ -226,7 +226,7 @@ struct CategoryView: View {
         newBudget.category = category
         
         // Update the remaining budget:
-        category.calcRemainingBudget(selectedPeriod: selectedPeriod.period)
+        _ = category.calcRemainingBudget(selectedPeriod: selectedPeriod.period)
         
         PersistenceController.shared.save() // save the changes
         

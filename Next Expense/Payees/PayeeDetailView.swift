@@ -107,7 +107,7 @@ struct PayeeDetailView: View {
                     .onAppear {
                         name = payee.name ?? ""
                     }
-                    .onChange(of: name) { _ in
+                    .onChange(of: name) {
                         payee.name = name
                         PersistenceController.shared.save()
                     }
@@ -121,7 +121,7 @@ struct PayeeDetailView: View {
                 .onAppear {
                     category = payee.category ?? categories[0]
                 }
-                .onChange(of: category) { _ in
+                .onChange(of: category) {
                     payee.category = category
                     PersistenceController.shared.save()
                 }
@@ -135,7 +135,7 @@ struct PayeeDetailView: View {
                 .onAppear {
                     account = payee.account ?? accounts[0]
                 }
-                .onChange(of: account) { _ in
+                .onChange(of: account) {
                     payee.account = account
                     PersistenceController.shared.save()
                 }

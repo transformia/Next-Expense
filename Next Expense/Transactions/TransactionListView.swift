@@ -166,11 +166,16 @@ struct TransactionListView: View {
                     
                     
                     // Increment the recurring transaction's date and update its period:
-                    transaction.date = Calendar.current.date(byAdding: .month, value: 1, to: transaction.date ?? Date())
+                    if transaction.recurrence == "Monthly" {
+                        transaction.date = Calendar.current.date(byAdding: .month, value: 1, to: transaction.date ?? Date())
+                    }
+                    else if transaction.recurrence == "Yearly" {
+                        transaction.date = Calendar.current.date(byAdding: .year, value: 1, to: transaction.date ?? Date())
+                    }
                     transaction.period = getPeriod(date: transaction.date ?? Date())
                     
                     // Update the category balance of that category:
-                    transaction.category?.calcBalance(period: selectedPeriod.period)
+                    _ = transaction.category?.calcBalance(period: selectedPeriod.period)
                     
                     // Update the account and to account balances:
                     transaction.account?.calcBalance(toDate: Date())
